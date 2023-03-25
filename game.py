@@ -147,7 +147,7 @@ class Game():
         random.shuffle(self.deck)
         top = self.deck[:len(player.hand)]
         while True:
-            print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any. Enter nothing to keep your hand.")
+            print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any.")
             try:
                 match input("Keep hand? (y/n): "):
                     case "y":
