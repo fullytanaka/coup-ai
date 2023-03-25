@@ -68,6 +68,11 @@ class Game():
             print("You don't have enough coins to coup.")
             return
         print(f"{player} coup {target}!")
+        player.coins -= 7
+        if len(target.hand) == 1:
+            print(f"{target} lost {target.hand[0]}")
+            target.hand.pop(0)
+            return
         print(f"{target} choose a card to lose by entering the index of the card.")
         while True:
             try:
