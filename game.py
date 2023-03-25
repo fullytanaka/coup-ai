@@ -141,18 +141,16 @@ class Game():
         while True:
             print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any. Enter nothing to keep your hand.")
             try:
+                match input("Keep hand? (y/n): "):
+                    case "y":
+                        break
+                    case default:
+                        pass
                 card_to_replace = int(input("Card to replace: "))
                 card = int(input("Card to swap with: "))
                 player.hand.append(top.pop(card))
                 top.append(player.hand.pop(card_to_replace))
                 print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
-                match input("Keep hand? (y/n): "):
-                    case "y":
-                        break
-                    case "n":
-                        continue
-                    case default:
-                        continue
             except ValueError:
                     print("Invalid input. Try again.")
 
