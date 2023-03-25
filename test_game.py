@@ -79,3 +79,29 @@ def test_tax(coup, capfd, monkeypatch):
     out, err = capfd.readouterr()
     assert out == "Player 1 gained 3 coins.\n"
     assert err == ""
+
+def test_assassinate(coup, capfd, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda: 0)
+    coup.players[0].hand = ["duke", "captain"]
+    coup.players[1].hand = ["duke"]
+
+    # Not enough coins to coup
+    coup.assassinate(coup.players[0], coup.players[1])
+    out, err = capfd.readouterr()
+    assert out == "You don't have enough coins to assassinate.\n"
+    assert err == ""
+
+    # Assassinate is successful with one card
+    coup.players[0].coins = 3
+    coup.assassinate(coup.players[0], coup.players[1])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 assassinate Player 2!\nPlayer 2 lost duke\n"
+    assert err == ""
+
+    # Assassinate is successful with two cards
+    coup.players[0].coins = 3
+    coup.players[1].hand = ["duke", "captain"]
+    coup.assassinate(coup.players[0], coup.players[1])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 assassinate Player 2!\nPlayer 2 choose a card to lose by entering the index of the card.\nPlayer 2 lost duke\n"
+    assert err == ""
