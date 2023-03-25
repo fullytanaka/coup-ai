@@ -21,3 +21,31 @@ def test_initial_draw_gives_two_cards(coup, monkeypatch):
     coup.initial_draw()
     assert len(coup.players[0].hand) == 2
     assert len(coup.players[1].hand) == 2
+
+def test_coup(coup, capfd, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda: 0)
+    coup.add_player("Player 1")
+    coup.add_player("Player 2")
+    coup.players[0].hand = ["duke", "captain"]
+    coup.players[1].hand = ["duke"]
+
+    # Not enough coins to coup
+    coup.coup(coup.players[0], coup.players[1])
+    out, err = capfd.readouterr()
+    assert out == "You don't have enough coins to coup.\n"
+    assert err == ""
+
+    # Coup is successful with one card
+    coup.players[0].coins = 7
+    coup.coup(coup.players[0], coup.players[1])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 coup Player 2!\nPlayer 2 lost duke\n"
+    assert err == ""
+
+    # Coup is successful with two cards
+    coup.players[0].coins = 7
+    coup.players[1].hand = ["duke", "captain"]
+    coup.coup(coup.players[0], coup.players[1])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 coup Player 2!\nPlayer 2 choose a card to lose by entering the index of the card.\nPlayer 2 lost duke\n"
+    assert err == ""
