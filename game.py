@@ -330,9 +330,3 @@ class Game():
         self.initial_draw()
         while self.game_won == False:
             self.game_loop()
-
-
-main = Game()
-main.add_player("Player 1")
-main.add_player("Player 2")
-main.start()
