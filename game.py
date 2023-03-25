@@ -1,7 +1,7 @@
 import random
 
 class Game():
-    """Alpha game of Coup."""
+    """Game of Coup."""
 
     class Player():
         """A player in the game."""
@@ -34,6 +34,11 @@ class Game():
         self.discard = []
         self.turn = 0
         self.game_won = False
+        self.actions = ["coup", "income", "foreign_aid", "tax", "assassinate", "exchange", "steal", "block", "challenge"]
+        self.blockable_actions = ["assassinate", "steal", "coup", "foreign_aid"]
+        self.challengeable_actions = ["tax", "assassinate", "steal", "exchange", "block"]
+        self.block_attempted = False
+        self.challenge_attempted = False
 
     def add_player(self, name):
         """Add a player to the game."""
@@ -164,23 +169,6 @@ class Game():
             target.coins -= 1
         player.coins += coins_stolen
         print(f"{player} gained {coins_stolen} coins.")
-
-    def block(self):
-        """
-        Block an action.
-        
-        Any player can block an action.
-        """
-        pass
-
-    def challenge(self):
-        """
-        Challenge an action or block.
-        
-        Any player can challenge an action. If the action is valid, the challenger loses an influence."""
-        pass
-
-    
                
     def game_loop(self):
         """
@@ -192,7 +180,7 @@ class Game():
         """
         for i in range(len(self.players)):
             influence_count = [len(player.hand) for player in self.players]
-            if min(influence_count) == 0:
+            if min(influence_count) == 0: # Check if a player has no more influences
                 print(f"{self.players[influence_count.index(min(influence_count))]} has no more influences!")
                 print("Game over!")
                 print(f"{self.players[influence_count.index(max(influence_count))]} wins!")
@@ -203,13 +191,46 @@ class Game():
             while True:
                 try:
                     action = input("Choose an action from coup, income, foreign aid, tax, assassinate, exchange, steal: ").lower().replace(" ", "_")
-                    if action in ["coup", "assassinate", "steal"]:
+                    if action not in self.actions:
+                        raise ValueError
+
+                    # Target chooses to allow, challenge or block
+                    if action in self.challengeable_actions and self.blockable_actions:
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge, block or allow:")
+                    elif action in self.challengeable_actions:
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge or allow:")
+                    elif action in self.blockable_actions:
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to block or allow:")
+
+                    match input().lower().replace(" ", "_"):
+                        case "challenge":
+                            self.challenge_attempted = True
+                        case "block":
+                            self.block_attempted = True
+                        case default:
+                            pass
+
+                    # Player can challenge a block attempt
+                    if self.block_attempted:
+                        match input(f"{self.players[i]}, choose to challenge or allow:"):
+                            case "challenge":
+                                self.challenge_attempted = True
+                            case default:
+                                pass
+
+                    print(f"{self.players[i].name} chose {action}.")
+                    if action in ["coup", "assassinate", "steal"]: # Actions that require a target
                         getattr(self, action)(self.players[i], self.players[(i + 1) % len(self.players)])
                     else:
                         getattr(self, action)(self.players[i])
                     break
-                except:
+                    self.challenge_attempted = False
+                    self.block_attempted = False
+                except ValueError:
                     print("Invalid input. Try again.")
+                except Exception as e:
+                    print(f"An error occurred: {e}")
+                    raise e
             
     
     def start(self):
