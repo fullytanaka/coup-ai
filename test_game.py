@@ -71,3 +71,11 @@ def test_foreign_aid(coup, capfd, monkeypatch):
     out, err = capfd.readouterr()
     assert out == "Player 1 gained 2 coins.\n"
     assert err == ""
+
+def test_tax(coup, capfd, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda: 0)
+    coup.players[0].coins = 0
+    coup.tax(coup.players[0])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 gained 3 coins.\n"
+    assert err == ""
