@@ -30,12 +30,12 @@ class Game():
     def __init__(self):
         """Initialize the game."""
         self.players = []
-        self.deck = ["Duke", "Assassin", "Ambassador", "Captain", "Contessa"] * 3
+        self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
         self.discard = []
         self.turn = 0
         self.game_won = False
         self.actions = ["coup", "income", "foreign_aid", "tax", "assassinate", "exchange", "steal", "block", "challenge"]
-        self.blockable_actions = ["assassinate", "steal", "coup", "foreign_aid"]
+        self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
         self.challengeable_actions = ["tax", "assassinate", "steal", "exchange", "block"]
         self.block_attempted = False
         self.challenge_attempted = False
@@ -60,7 +60,7 @@ class Game():
                     player.hand.append(draw[card])
                     print(f"{player.name} chose {draw[card]}")
                     draw.pop(card)
-                except:
+                except ValueError:
                     print("Invalid input. Try again.")
             self.deck.append(draw[0])
     
@@ -81,6 +81,10 @@ class Game():
             print(f"{target} lost {target.hand[0]}")
             target.hand.pop(0)
             return
+        self.lose_card(target)
+    
+    def lose_card(self, target):
+        """Target choose a card to lose."""
         print(f"{target} choose a card to lose by entering the index of the card.")
         while True:
             try:
@@ -88,8 +92,8 @@ class Game():
                 print(f"{target} lost {target.hand[card]}")
                 target.hand.pop(card)
                 break
-            except:
-                print("Invalid input. Try again.")
+            except ValueError:
+                    print("Invalid input. Try again.")
     
     def income(self, player):
         """Gain 1 coin."""
@@ -125,15 +129,7 @@ class Game():
             print(f"{target} lost {target.hand[0]}")
             target.hand.pop(0)
             return
-        print(f"{target} choose a card to lose by entering the index of the card.")
-        while True:
-            try:
-                card = int(input())
-                print(f"{target} lost {target.hand[card]}")
-                target.hand.pop(card)
-                break
-            except:
-                print("Invalid input. Try again.")
+        self.lose_card(target)
 
     
     def exchange(self, player):
@@ -147,13 +143,18 @@ class Game():
             try:
                 card_to_replace = int(input("Card to replace: "))
                 card = int(input("Card to swap with: "))
-                if card == "":
-                    break
                 player.hand.append(top.pop(card))
                 top.append(player.hand.pop(card_to_replace))
                 print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
-            except:
-                print("Invalid input. Try again.")
+                match input("Keep hand? (y/n): "):
+                    case "y":
+                        break
+                    case "n":
+                        continue
+                    case default:
+                        continue
+            except ValueError:
+                    print("Invalid input. Try again.")
 
     def steal(self, player, target):
         """Captain influence. Steal up to 2 coins from a target."""
@@ -169,6 +170,42 @@ class Game():
             target.coins -= 1
         player.coins += coins_stolen
         print(f"{player} gained {coins_stolen} coins.")
+
+    def block(self, player, target, action):
+        """
+        Process the blocking of an action.
+
+        If a challenge on the block is attempted, the Player must have the card that can block the action. Otherwise, they lose an influence.
+
+        Blockable actions: 
+            assassinate     by the contessa
+            steal           by the ambassador or captain
+            foreign_aid     by the duke
+        """
+        print("Processing block...")
+        if self.challenge_attempted:
+            match action:
+                case "assassinate":
+                    if "contessa" in target.hand:
+                        print(f"{target} had the contessa and blocked the assassination!")
+                        self.lose_card(player)
+                case "steal":
+                    if "ambassador" in target.hand or "captain" in target.hand:
+                        print(f"{target} had the ambassador or captain and blocked the steal!")
+                        self.lose_card(player)
+                case "foreign_aid":
+                    if "duke" in target.hand:
+                        print(f"{target} had the duke and blocked the foreign aid!")
+                        self.lose_card(player)
+                case default:
+                    print(f"{player} did not have the card to block the action!")
+                    self.lose_card(target)
+        else:
+            print(f"{target} blocked the action!")
+    
+    def challenge(self, player, target, action):
+        """Challenge an action."""
+        pass
                
     def game_loop(self):
         """
@@ -180,27 +217,34 @@ class Game():
         """
         for i in range(len(self.players)):
             influence_count = [len(player.hand) for player in self.players]
+
             if min(influence_count) == 0: # Check if a player has no more influences
                 print(f"{self.players[influence_count.index(min(influence_count))]} has no more influences!")
                 print("Game over!")
                 print(f"{self.players[influence_count.index(max(influence_count))]} wins!")
                 self.game_won = True
                 break
+
             print(f"{self.players[i].name}'s turn.")
             print(self.players[i].print_information())
+
+            # Player chooses an action
             while True:
+                self.challenge_attempted = False
+                self.block_attempted = False
+
                 try:
                     action = input(f"Choose an action from {', '.join(self.actions)}: ").lower().replace(" ", "_")
                     if action not in self.actions:
                         raise ValueError
 
                     # Target chooses to allow, challenge or block
-                    if action in self.challengeable_actions and self.blockable_actions:
-                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge, block or allow:")
+                    if action in self.challengeable_actions and action in self.blockable_actions:
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge, block or allow: ")
                     elif action in self.challengeable_actions:
-                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge or allow:")
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge or allow: ")
                     elif action in self.blockable_actions:
-                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to block or allow:")
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to block or allow: ")
 
                     match input().lower().replace(" ", "_"):
                         case "challenge":
@@ -210,22 +254,28 @@ class Game():
                         case default:
                             pass
 
-                    # Player can challenge a block attempt
                     if self.block_attempted:
-                        match input(f"{self.players[i]}, choose to challenge or allow:"):
+                        # Player can challenge a block attempt
+                        match input(f"{self.players[i]}, choose to challenge or allow: "):
                             case "challenge":
                                 self.challenge_attempted = True
                             case default:
                                 pass
+                        self.block(self.players[i], self.players[(i + 1) % len(self.players)], action)
+                        break
 
-                    print(f"{self.players[i].name} chose {action}.")
-                    if action in ["coup", "assassinate", "steal"]: # Actions that require a target
-                        getattr(self, action)(self.players[i], self.players[(i + 1) % len(self.players)])
-                    else:
-                        getattr(self, action)(self.players[i])
-                    break
-                    self.challenge_attempted = False
-                    self.block_attempted = False
+                    elif self.challenge_attempted:
+                        self.challenge(self.players[i], self.players[(i + 1) % len(self.players)], action)
+                        break
+
+                    else: # Action is allowed
+                        print(f"{self.players[i].name} chose {action}.")
+                        if action in ["coup", "assassinate", "steal"]: # Actions that require a target
+                            getattr(self, action)(self.players[i], self.players[(i + 1) % len(self.players)])
+                        else:
+                            getattr(self, action)(self.players[i])
+                        break
+
                 except ValueError:
                     print("Invalid input. Try again.")
                 except Exception as e:
