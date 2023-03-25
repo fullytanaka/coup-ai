@@ -190,7 +190,7 @@ class Game():
             print(self.players[i].print_information())
             while True:
                 try:
-                    action = input("Choose an action from coup, income, foreign aid, tax, assassinate, exchange, steal: ").lower().replace(" ", "_")
+                    action = input(f"Choose an action from {', '.join(self.actions)}: ").lower().replace(" ", "_")
                     if action not in self.actions:
                         raise ValueError
 
