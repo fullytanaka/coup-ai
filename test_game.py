@@ -55,3 +55,19 @@ def test_coup(coup, capfd, monkeypatch):
     out, err = capfd.readouterr()
     assert out == "Player 1 coup Player 2!\nPlayer 2 choose a card to lose by entering the index of the card.\nPlayer 2 lost duke\n"
     assert err == ""
+
+def test_income(coup, capfd, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda: 0)
+    coup.players[0].coins = 0
+    coup.income(coup.players[0])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 gained 1 coin.\n"
+    assert err == ""
+
+def test_foreign_aid(coup, capfd, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda: 0)
+    coup.players[0].coins = 0
+    coup.foreign_aid(coup.players[0])
+    out, err = capfd.readouterr()
+    assert out == "Player 1 gained 2 coins.\n"
+    assert err == ""
