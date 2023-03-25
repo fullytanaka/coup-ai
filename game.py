@@ -11,16 +11,20 @@ class Game():
             self.hand = []
             self.coins = 2
 
+        def print_information(self):
+            """print information about the player."""
+            return f"{self.name} has {self.coins} coins and {self.hand} in their hand."
+        
         def __str__(self):
-            """Return a string representation of the player."""
+            """Return the name of the player."""
             return self.name
-
+        
         def __repr__(self):
-            """Return a string representation of the player."""
+            """Return the name of the player."""
             return self.name
-
+        
         def __eq__(self, other):
-            """Return True if the players are equal."""
+            """Return whether the player is equal to another player."""
             return self.name == other.name
         
     def __init__(self):
@@ -29,6 +33,7 @@ class Game():
         self.deck = ["Duke", "Assassin", "Ambassador", "Captain", "Contessa"] * 3
         self.discard = []
         self.turn = 0
+        self.game_won = False
 
     def add_player(self, name):
         """Add a player to the game."""
@@ -122,16 +127,49 @@ class Game():
                
     def game_loop(self):
         """The game loop."""
-        while len(self.players) > 1:
-            self.turn += 1
-            self.steal(self.players[0], self.players[1])
-            break
+        for i in range(len(self.players)):
+            influence_count = [len(player.hand) for player in self.players]
+            if min(influence_count) == 0:
+                print(f"{self.players[influence_count.index(min(influence_count))]} has no more influences!")
+                print("Game over!")
+                print(f"{self.players[influence_count.index(max(influence_count))]} wins!")
+                self.game_won = True
+                break
+            print(f"{self.players[i].name}'s turn.")
+            print(self.players[i].print_information())
+            while True:
+                try:
+                    action = input("Choose an action from coup, income, foreign aid, tax, exchange, steal: ").lower().replace(" ", "_")
+                    match action:
+                        case "coup":
+                            self.coup(self.players[i], self.players[(i + 1) % len(self.players)])
+                            break
+                        case "income":
+                            self.income(self.players[i])
+                            break
+                        case "foreign_aid":
+                            self.foreign_aid(self.players[i])
+                            break
+                        case "tax":
+                            self.tax(self.players[i])
+                            break
+                        case "exchange":
+                            self.exchange(self.players[i])
+                            break
+                        case "steal":
+                            self.steal(self.players[i], self.players[(i + 1) % len(self.players)])
+                            break
+                        case _:
+                            print("Invalid input. Try again.")
+                except:
+                    raise Exception("Invalid input. Try again.")
+            
     
     def start(self):
         """Start the game."""
         self.initial_draw()
-        self.turn = 0
-        self.game_loop()
+        while self.game_won == False:
+            self.game_loop()
 
 
 main = Game()
