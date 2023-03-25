@@ -75,6 +75,8 @@ class Game():
                 print(f"{target} lost {target.hand[card]}")
                 target.hand.pop(card)
                 break
+            except IndexError:
+                print("Invalid input. Try again.")
             except ValueError:
                     print("Invalid input. Try again.")
     """
