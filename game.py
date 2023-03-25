@@ -97,6 +97,28 @@ class Game():
         """Duke influence. Gain 3 coins."""
         player.coins += 3
         print(f"{player} gained 3 coins.")
+
+    def assassinate(self, player, target):
+        """Assassin influence. Assassinate a player."""
+        if player.coins < 3:
+            print("You don't have enough coins to assassinate.")
+            return
+        print(f"{player} assassinate {target}!")
+        player.coins -= 3
+        if len(target.hand) == 1:
+            print(f"{target} lost {target.hand[0]}")
+            target.hand.pop(0)
+            return
+        print(f"{target} choose a card to lose by entering the index of the card.")
+        while True:
+            try:
+                card = int(input())
+                print(f"{target} lost {target.hand[card]}")
+                target.hand.pop(card)
+                break
+            except:
+                print("Invalid input. Try again.")
+
     
     def exchange(self, player):
         """Ambassador influence. Exchange two cards with the deck."""
@@ -144,7 +166,7 @@ class Game():
             print(self.players[i].print_information())
             while True:
                 try:
-                    action = input("Choose an action from coup, income, foreign aid, tax, exchange, steal: ").lower().replace(" ", "_")
+                    action = input("Choose an action from coup, income, foreign aid, tax, assassinate, exchange, steal: ").lower().replace(" ", "_")
                     match action:
                         case "coup":
                             self.coup(self.players[i], self.players[(i + 1) % len(self.players)])
@@ -157,6 +179,9 @@ class Game():
                             break
                         case "tax":
                             self.tax(self.players[i])
+                            break
+                        case "assassinate":
+                            self.assassinate(self.players[i], self.players[(i + 1) % len(self.players)])
                             break
                         case "exchange":
                             self.exchange(self.players[i])
