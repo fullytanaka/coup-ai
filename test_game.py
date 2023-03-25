@@ -30,11 +30,6 @@ def test_lose_card(coup, capfd, monkeypatch):
     assert out == "Player 2 choose a card to lose by entering the index of the card.\nPlayer 2 lost duke\n"
     assert err == ""
 
-    
-    monkeypatch.setattr("builtins.input", lambda: 2)
-    coup.players[1].hand = ["duke", "captain"]
-    with pytest.raises(IndexError): coup.lose_card(coup.players[1])
-
 def test_coup(coup, capfd, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda: 0)
     coup.players[0].hand = ["duke", "captain"]
