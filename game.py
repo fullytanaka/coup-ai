@@ -66,7 +66,17 @@ class Game():
             random.shuffle(self.deck)
             player.hand.append(self.deck.pop())
             
-    
+    def lose_card(self, target):
+        """Target choose a card to lose."""
+        print(f"{target} choose a card to lose by entering the index of the card.")
+        while True:
+            try:
+                card = int(input())
+                print(f"{target} lost {target.hand[card]}")
+                target.hand.pop(card)
+                break
+            except ValueError:
+                    print("Invalid input. Try again.")
     """
     Game actions
     """
@@ -85,18 +95,6 @@ class Game():
             target.hand.pop(0)
             return
         self.lose_card(target)
-    
-    def lose_card(self, target):
-        """Target choose a card to lose."""
-        print(f"{target} choose a card to lose by entering the index of the card.")
-        while True:
-            try:
-                card = int(input())
-                print(f"{target} lost {target.hand[card]}")
-                target.hand.pop(card)
-                break
-            except ValueError:
-                    print("Invalid input. Try again.")
     
     def income(self, player):
         """Gain 1 coin."""
