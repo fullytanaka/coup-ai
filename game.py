@@ -204,8 +204,53 @@ class Game():
             print(f"{target} blocked the action!")
     
     def challenge(self, player, target, action):
-        """Challenge an action."""
-        pass
+        """
+        Challenge an action.
+
+        Challengeable actions: tax, assassinate, steal, exchange, block
+        
+        Return True if the challenge was successful, False otherwise.
+        """
+        print("Processing challenge...")
+        match action:
+            case "tax":
+                if "duke" in player.hand:
+                    print(f"{player} had the duke! The tax was successful!")
+                    self.lose_card(target)
+                    return False
+                else:
+                    print(f"{player} did not have the duke! The challenge was successful!")
+                    self.lose_card(player)
+                    return True
+            case "steal":
+                if "captain" in player.hand:
+                    print(f"{player} had the captain! The steal was successful!")
+                    self.lose_card(target)
+                    return False
+                else:
+                    print(f"{player} did not have the captain! The challenge was successful!")
+                    self.lose_card(player)
+                    return True
+            case "exchange":
+                if "ambassador" in player.hand:
+                    print(f"{player} had the ambassador! The exchange was successful!")
+                    self.lose_card(target)
+                    return False
+                else:
+                    print(f"{player} did not have the ambassador! The challenge was successful!")
+                    self.lose_card(player)
+                    return True
+            case "assassinate":
+                if "assassin" in player.hand:
+                    print(f"{player} had the assassin! The assassination was successful!")
+                    self.lose_card(target)
+                    return False
+                else:
+                    print(f"{player} did not have the assassin! The challenge was successful!")
+                    self.lose_card(player)
+                    return True
+            case default:
+                pass
                
     def game_loop(self):
         """
@@ -263,12 +308,11 @@ class Game():
                                 pass
                         self.block(self.players[i], self.players[(i + 1) % len(self.players)], action)
                         break
-
-                    elif self.challenge_attempted:
-                        self.challenge(self.players[i], self.players[(i + 1) % len(self.players)], action)
-                        break
-
                     else: # Action is allowed
+                        if self.challenge_attempted:
+                            if self.challenge(self.players[i], self.players[(i + 1) % len(self.players)], action):
+                                break
+
                         print(f"{self.players[i].name} chose {action}.")
                         if action in ["coup", "assassinate", "steal"]: # Actions that require a target
                             getattr(self, action)(self.players[i], self.players[(i + 1) % len(self.players)])
