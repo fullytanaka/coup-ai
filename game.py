@@ -203,7 +203,7 @@ class Game():
     
     def challenge(self, player, target, action):
         """
-        Challenge an action.
+        Process the challenging of an action.
 
         Challengeable actions: tax, assassinate, steal, exchange, block
         
