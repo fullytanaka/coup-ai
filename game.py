@@ -86,7 +86,8 @@ class Game():
         """
         Coup a player.
         
-        Coup a player by paying 7 coins. The target must choose a card to lose."""
+        Coup a player by paying 7 coins. The target must choose a card to lose.
+        """
         if player.coins < 7:
             print("You don't have enough coins to coup.")
             return
@@ -99,12 +100,16 @@ class Game():
         self.lose_card(target)
     
     def income(self, player):
-        """Gain 1 coin."""
+        """
+        Gain 1 coin.
+        """
         player.coins += 1
         print(f"{player} gained 1 coin.")
 
     def foreign_aid(self, player):
-        """Gain 2 coins."""
+        """
+        Gain 2 coins.
+        """
         player.coins += 2
         print(f"{player} gained 2 coins.")
 
@@ -158,7 +163,9 @@ class Game():
                     print("Invalid input. Try again.")
 
     def steal(self, player, target):
-        """Captain influence. Steal up to 2 coins from a target."""
+        """
+        Captain influence. Steal up to 2 coins from a target.
+        """
         if target.coins == 0:
             print(f"{target} has no coins to steal.")
             return
