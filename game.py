@@ -63,7 +63,10 @@ class Game():
     Game actions
     """
     def coup(self, player, target):
-        """Coup a player."""
+        """
+        Coup a player.
+        
+        Coup a player by paying 7 coins. The target must choose a card to lose."""
         if player.coins < 7:
             print("You don't have enough coins to coup.")
             return
@@ -94,12 +97,20 @@ class Game():
         print(f"{player} gained 2 coins.")
 
     def tax(self, player):
-        """Duke influence. Gain 3 coins."""
+        """
+        Duke influence. Gain 3 coins.
+        """
         player.coins += 3
         print(f"{player} gained 3 coins.")
 
     def assassinate(self, player, target):
-        """Assassin influence. Assassinate a player."""
+        """
+        Assassin influence. Assassinate a player.
+        
+        Assassinate a player by paying 3 coins. The target must choose a card to lose.
+        
+        Assassinate can be blocked by the Contessa.
+        """
         if player.coins < 3:
             print("You don't have enough coins to assassinate.")
             return
@@ -121,9 +132,11 @@ class Game():
 
     
     def exchange(self, player):
-        """Ambassador influence. Exchange two cards with the deck."""
+        """
+        Ambassador influence. Exchange their own cards with cards the deck.
+        """
         random.shuffle(self.deck)
-        top = self.deck[:2]
+        top = self.deck[:len(player.hand)]
         while True:
             print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any. Enter nothing to keep your hand.")
             try:
@@ -151,9 +164,32 @@ class Game():
             target.coins -= 1
         player.coins += coins_stolen
         print(f"{player} gained {coins_stolen} coins.")
+
+    def block(self):
+        """
+        Block an action.
+        
+        Any player can block an action.
+        """
+        pass
+
+    def challenge(self):
+        """
+        Challenge an action or block.
+        
+        Any player can challenge an action. If the action is valid, the challenger loses an influence."""
+        pass
+
+    
                
     def game_loop(self):
-        """The game loop."""
+        """
+        The game loop.
+        
+        The game loop will continue until a player has no more influences.
+        
+        Each player will take a turn, choosing an action to take, and the opposing player chooses to allow the action, challenge or block.
+        """
         for i in range(len(self.players)):
             influence_count = [len(player.hand) for player in self.players]
             if min(influence_count) == 0:
@@ -167,32 +203,13 @@ class Game():
             while True:
                 try:
                     action = input("Choose an action from coup, income, foreign aid, tax, assassinate, exchange, steal: ").lower().replace(" ", "_")
-                    match action:
-                        case "coup":
-                            self.coup(self.players[i], self.players[(i + 1) % len(self.players)])
-                            break
-                        case "income":
-                            self.income(self.players[i])
-                            break
-                        case "foreign_aid":
-                            self.foreign_aid(self.players[i])
-                            break
-                        case "tax":
-                            self.tax(self.players[i])
-                            break
-                        case "assassinate":
-                            self.assassinate(self.players[i], self.players[(i + 1) % len(self.players)])
-                            break
-                        case "exchange":
-                            self.exchange(self.players[i])
-                            break
-                        case "steal":
-                            self.steal(self.players[i], self.players[(i + 1) % len(self.players)])
-                            break
-                        case _:
-                            print("Invalid input. Try again.")
+                    if action in ["coup", "assassinate", "steal"]:
+                        getattr(self, action)(self.players[i], self.players[(i + 1) % len(self.players)])
+                    else:
+                        getattr(self, action)(self.players[i])
+                    break
                 except:
-                    raise Exception("Invalid input. Try again.")
+                    print("Invalid input. Try again.")
             
     
     def start(self):
