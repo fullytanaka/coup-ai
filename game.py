@@ -39,7 +39,7 @@ class Game():
         self.players.remove(self.Player(name))
 
     def initial_draw(self):
-        """Initial draw. Shuffle the deck and each the player choose two cards from the top three cards."""
+        """Initial draw. Shuffle the deck and each the player choose two cards from the top three cards, as per the rules of two-player Coup."""
         for player in self.players:
             random.shuffle(self.deck)
             draw = self.deck[:3]
@@ -104,27 +104,28 @@ class Game():
                 print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
             except:
                 print("Invalid input. Try again.")
-        
-
 
     def steal(self, player, target):
-        """Steal coins from a player."""
-        if player.coins < 7:
-            print("You don't have enough coins to steal.")
+        """Captain influence. Steal up to 2 coins from a target."""
+        if target.coins == 0:
+            print(f"{target} has no coins to steal.")
             return
         print(f"{player} steal from {target}!")
-        if target.coins > 0:
-            player.coins += 1
+        coins_stolen = 0
+        for i in range(2):
+            if target.coins == 0:
+                break
+            coins_stolen += 1
             target.coins -= 1
-            print(f"{player} gained 1 coin from {target}.")
-        else:
-            print(f"{target} has no coins to steal.")
-    
+        player.coins += coins_stolen
+        print(f"{player} gained {coins_stolen} coins.")
+               
     def game_loop(self):
         """The game loop."""
         while len(self.players) > 1:
             self.turn += 1
-            self.exchange(self.players[self.turn % len(self.players)])
+            self.steal(self.players[0], self.players[1])
+            break
     
     def start(self):
         """Start the game."""
