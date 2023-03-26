@@ -62,15 +62,18 @@ class Game():
             random.shuffle(self.deck)
             draw = self.deck[:3]
             print(f"{player.name} choose a card from {draw} by entering the index of the card.")
-            while len(draw) > 2:
+            while True:
                 try:
                     card = int(input())
                     player.hand.append(draw[card])
                     print(f"{player.name} chose {draw[card]}")
                     draw.pop(card)
+                    break
                 except ValueError:
                     print("Invalid input. Try again.")
-            self.deck.append(draw)
+            for card in draw:
+                self.deck.append(card)
+                draw.remove(card)
             random.shuffle(self.deck)
             player.hand.append(self.deck.pop())
             
