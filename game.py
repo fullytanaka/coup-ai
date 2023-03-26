@@ -11,6 +11,14 @@ class Game():
             self.hand = []
             self.coins = 2
 
+        def add_card(self, card):
+            """Add a card to the player's hand."""
+            self.hand.append(card)
+        
+        def remove_card(self, card):
+            """Remove a card from the player's hand."""
+            self.hand.remove(card)
+
         def print_information(self):
             """print information about the player."""
             return f"{self.name} has {self.coins} coins and {self.hand} in their hand."
@@ -32,7 +40,7 @@ class Game():
         self.players = []
         self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
         self.discard = []
-        self.turn = 0
+        self.round = 0
         self.game_won = False
         self.actions = ["coup", "income", "foreign_aid", "tax", "assassinate", "exchange", "steal", "block", "challenge"]
         self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
@@ -195,18 +203,31 @@ class Game():
             match action:
                 case "assassinate":
                     if "contessa" in target.hand:
-                        print(f"{target} had the contessa and blocked the assassination!")
+                        print(f"{target} had the contessa and blocked the assassination! The challenge was unsuccessful!")
                         self.lose_card(player)
+                        target.remove_card("contessa")
+                        self.deck.append("contessa")
+                        target.add_card(self.deck.pop())
                 case "steal":
                     if "ambassador" in target.hand or "captain" in target.hand:
-                        print(f"{target} had the ambassador or captain and blocked the steal!")
+                        print(f"{target} had the ambassador or captain and blocked the steal! The challenge was unsuccessful!")
                         self.lose_card(player)
+                        if "ambassador" in target.hand:
+                            target.remove_card("ambassador")
+                            self.deck.append("ambassador")
+                        elif "captain" in target.hand:
+                            target.remove_card("captain")
+                            self.deck.append("captain")
+                        target.add_card(self.deck.pop())
                 case "foreign_aid":
                     if "duke" in target.hand:
-                        print(f"{target} had the duke and blocked the foreign aid!")
+                        print(f"{target} had the duke and blocked the foreign aid! The challenge was unsuccessful!")
                         self.lose_card(player)
+                        target.remove_card("duke")
+                        self.deck.append("duke")
+                        target.add_card(self.deck.pop())
                 case default:
-                    print(f"{player} did not have the card to block the action!")
+                    print(f"{player} did not have the card to block the action! The challenge was unsuccessful!")
                     self.lose_card(target)
         else:
             print(f"{target} blocked the action!")
@@ -225,6 +246,10 @@ class Game():
                 if "duke" in player.hand:
                     print(f"{player} had the duke! The tax was successful!")
                     self.lose_card(target)
+                    player.remove_card("duke")
+                    player.add_card(self.deck.pop())
+                    self.deck.append("duke")
+                    player.add_card(self.deck.pop())
                     return False
                 else:
                     print(f"{player} did not have the duke! The challenge was successful!")
@@ -233,6 +258,9 @@ class Game():
             case "steal":
                 if "captain" in player.hand:
                     print(f"{player} had the captain! The steal was successful!")
+                    player.remove_card("captain")
+                    player.add_card(self.deck.pop())
+                    self.deck.append("captain")
                     self.lose_card(target)
                     return False
                 else:
@@ -243,6 +271,9 @@ class Game():
                 if "ambassador" in player.hand:
                     print(f"{player} had the ambassador! The exchange was successful!")
                     self.lose_card(target)
+                    player.remove_card("ambassador")
+                    player.add_card(self.deck.pop())
+                    self.deck.append("ambassador")
                     return False
                 else:
                     print(f"{player} did not have the ambassador! The challenge was successful!")
@@ -251,6 +282,9 @@ class Game():
             case "assassinate":
                 if "assassin" in player.hand:
                     print(f"{player} had the assassin! The assassination was successful!")
+                    player.remove_card("assassin")
+                    player.add_card(self.deck.pop())
+                    self.deck.append("assassin")
                     self.lose_card(target)
                     return False
                 else:
@@ -268,6 +302,9 @@ class Game():
         
         Each player will take a turn, choosing an action to take, and the opposing player chooses to allow the action, challenge or block.
         """
+        self.round += 1
+        random.shuffle(self.deck)
+        print(f"==================== Round {self.round} ====================")
         for i in range(len(self.players)):
             influence_count = [len(player.hand) for player in self.players]
 
