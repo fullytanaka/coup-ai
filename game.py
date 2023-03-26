@@ -39,10 +39,9 @@ class Game():
         """Initialize the game."""
         self.players = []
         self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
-        self.discard = []
         self.round = 0
         self.game_won = False
-        self.actions = ["coup", "income", "foreign_aid", "tax", "assassinate", "exchange", "steal", "block", "challenge"]
+        self.playable_actions = []
         self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
         self.challengeable_actions = ["tax", "assassinate", "steal", "exchange", "block"]
         self.block_attempted = False
@@ -211,6 +210,9 @@ class Game():
                         target.remove_card("contessa")
                         self.deck.append("contessa")
                         target.add_card(self.deck.pop())
+                    else:
+                        print(f"{target} didn't have the contessa and the challenge was successful!")
+                        self.lose_card(target)
                 case "steal":
                     if "ambassador" in target.hand or "captain" in target.hand:
                         print(f"{target} had the ambassador or captain and blocked the steal! The challenge was unsuccessful!")
@@ -323,23 +325,25 @@ class Game():
 
             # Player chooses an action
             while True:
+                self.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
                 self.challenge_attempted = False
                 self.block_attempted = False
 
                 try:
-                    action = input(f"Choose an action from {', '.join(self.actions[:-2])}: ").lower().replace(" ", "_")
-                    if action not in self.actions[:-2]:
+                    action = input(f"Choose an action from {', '.join(self.playable_actions)}: ").lower().replace(" ", "_")
+                    if action not in self.playable_actions:
                         raise ValueError
 
                     # If the action is challengeable/blockable, target chooses to allow, challenge or block
                     if action in self.challengeable_actions and action in self.blockable_actions:
-                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge, block or allow: ")
+                        self.playable_actions = ["allow", "challenge", "block"]
                     elif action in self.challengeable_actions:
-                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge or allow: ")
+                        self.playable_actions = ["allow", "challenge"]
                     elif action in self.blockable_actions:
-                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to block or allow: ")
+                        self.playable_actions = ["allow", "block"]
 
                     if action in self.challengeable_actions or action in self.blockable_actions:
+                        print(f"{self.players[(i + 1) % len(self.players)]}, choose to {', '.join(self.playable_actions)}: ")
                         match input().lower().replace(" ", "_"):
                             case "challenge":
                                 self.challenge_attempted = True
@@ -350,6 +354,7 @@ class Game():
 
                     if self.block_attempted:
                         # Player can challenge a block attempt
+                        self.playable_actions = ["allow", "challenge"]
                         match input(f"{self.players[i]}, choose to challenge or allow: "):
                             case "challenge":
                                 self.challenge_attempted = True
@@ -378,6 +383,15 @@ class Game():
     
     def start(self):
         """Start the game."""
-        self.initial_draw()
+        # self.initial_draw()
         while self.game_won == False:
             self.game_loop()
+
+game = Game()
+game.add_player("Player 1")
+game.players[0].add_card("contessa")
+game.players[0].add_card("assassin")
+game.add_player("Player 2")
+game.players[1].add_card("duke")
+game.players[1].add_card("assassin")
+game.start()
