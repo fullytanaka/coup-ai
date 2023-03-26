@@ -324,11 +324,11 @@ class Game():
                 self.block_attempted = False
 
                 try:
-                    action = input(f"Choose an action from {', '.join(self.actions)}: ").lower().replace(" ", "_")
-                    if action not in self.actions:
+                    action = input(f"Choose an action from {', '.join(self.actions[:-2])}: ").lower().replace(" ", "_")
+                    if action not in self.actions[:-2]:
                         raise ValueError
 
-                    # Target chooses to allow, challenge or block
+                    # If the action is challengeable/blockable, target chooses to allow, challenge or block
                     if action in self.challengeable_actions and action in self.blockable_actions:
                         print(f"{self.players[(i + 1) % len(self.players)]}, choose to challenge, block or allow: ")
                     elif action in self.challengeable_actions:
@@ -336,13 +336,14 @@ class Game():
                     elif action in self.blockable_actions:
                         print(f"{self.players[(i + 1) % len(self.players)]}, choose to block or allow: ")
 
-                    match input().lower().replace(" ", "_"):
-                        case "challenge":
-                            self.challenge_attempted = True
-                        case "block":
-                            self.block_attempted = True
-                        case default:
-                            pass
+                    if action in self.challengeable_actions or action in self.blockable_actions:
+                        match input().lower().replace(" ", "_"):
+                            case "challenge":
+                                self.challenge_attempted = True
+                            case "block":
+                                self.block_attempted = True
+                            case default:
+                                pass
 
                     if self.block_attempted:
                         # Player can challenge a block attempt
