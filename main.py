@@ -7,7 +7,6 @@ parser.add_argument("-p", "--player", help="Play against another player", action
 parser.add_argument("-c", "--computer", help="Play against the computer", action="store_true")
 args = parser.parse_args()
 
-game = game.Game()
 class GameState:
     """
     The state of the game.
@@ -20,6 +19,20 @@ class GameState:
         return {
             "players": game.players,
             "game_won": game.game_won,
+            "round": game.round,
+            "deck": game.deck,
+        }
+    
+    def get_player_state(self, name):
+        """
+        Returns a dictionary of the state from the perspective of the player.
+        """
+        return {
+            "hand": game.players.index(name).hand,
+            "coins": game.players.index(name).coins,
+            "influence_count": len(game.players.index(name).hand),
+            "opponent_coins": game.players[(game.players.index(name) + 1) % len(game.players)].coins,
+            "opponent_influence_count": len(game.players[(game.players.index(name) + 1) % len(game.players)].hand),
         }
 
     def get_playable_actions(self):
@@ -28,20 +41,10 @@ class GameState:
         """
         return game.playable_actions
 
-if __name__ == "__main__":
-    if args.player:
-        print("Player vs Player")
-    elif args.computer:
-        print("Player vs Computer")
-    else:
-        print("Player vs Player")
-
-    print("Welcome to Coup!")
-
-    game.add_player("Player 1")
-    game.add_player("Player 2")
-
-    game.initial_draw()
+def game_loop_pvp():
+    """
+    The game loop for player vs player.
+    """
     while game.game_won == False:
         game.round += 1
         random.shuffle(game.deck)
@@ -115,3 +118,29 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(f"An error occurred: {e}")
                     raise e
+
+def game_loop_pvc():
+    """
+    The game loop for player vs computer.
+    """
+    pass
+ 
+if __name__ == "__main__":
+    game = game.Game()
+
+    print("Welcome to Coup!")
+
+    game.add_player("Player 1")
+    game.add_player("Player 2")
+
+    if args.player:
+        print("Player vs Player")
+        game.initial_draw()
+        game_loop_pvp()
+    elif args.computer:
+        print("Player vs Computer")
+        # game_loop_pvc()
+    else:
+        print("Player vs Player")
+        game.initial_draw()
+        game_loop_pvp()
