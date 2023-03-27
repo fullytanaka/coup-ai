@@ -379,19 +379,3 @@ class Game():
                 except Exception as e:
                     print(f"An error occurred: {e}")
                     raise e
-            
-    
-    def start(self):
-        """Start the game."""
-        # self.initial_draw()
-        while self.game_won == False:
-            self.game_loop()
-
-game = Game()
-game.add_player("Player 1")
-game.players[0].add_card("contessa")
-game.players[0].add_card("assassin")
-game.add_player("Player 2")
-game.players[1].add_card("duke")
-game.players[1].add_card("assassin")
-game.start()

@@ -7,11 +7,19 @@ parser.add_argument("-c", "--computer", help="Play against the computer", action
 args = parser.parse_args()
 
 game = game.Game()
-if args.player:
+if __name__ == "__main__":
+    if args.player:
+        print("Player vs Player")
+    elif args.computer:
+        print("Player vs Computer")
+    else:
+        print("Player vs Player")
+
+    print("Welcome to Coup!")
+
     game.add_player("Player 1")
     game.add_player("Player 2")
-    game.start()
-elif args.computer:
-    game.add_player("Player 1")
-    game.add_player("Computer")
-    game.start()
+
+    game.initial_draw()
+    while game.game_won == False:
+        game.game_loop()
