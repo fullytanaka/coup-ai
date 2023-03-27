@@ -7,6 +7,26 @@ parser.add_argument("-c", "--computer", help="Play against the computer", action
 args = parser.parse_args()
 
 game = game.Game()
+class GameState:
+    """
+    The state of the game.
+    """
+
+    def get_global_state(self):
+        """
+        Returns a dictionary of the global state.
+        """
+        return {
+            "players": game.players,
+            "game_won": game.game_won,
+        }
+
+    def get_playable_actions(self):
+        """
+        Returns a list of actions that can be played.
+        """
+        return game.playable_actions
+
 if __name__ == "__main__":
     if args.player:
         print("Player vs Player")
