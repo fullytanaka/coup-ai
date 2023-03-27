@@ -10,29 +10,24 @@ args = parser.parse_args()
 class GameState:
     """
     The state of the game.
-    """
-
-    def get_global_state(self):
-        """
-        Returns a dictionary of the global state.
-        """
-        return {
-            "players": game.players,
-            "game_won": game.game_won,
-            "round": game.round,
-            "deck": game.deck,
-        }
-    
+    """ 
     def get_player_state(self, name):
         """
         Returns a dictionary of the state from the perspective of the player.
         """
         return {
+            # Player information
             "hand": game.players.index(name).hand,
             "coins": game.players.index(name).coins,
             "influence_count": len(game.players.index(name).hand),
+
+            # Opponent information
             "opponent_coins": game.players[(game.players.index(name) + 1) % len(game.players)].coins,
             "opponent_influence_count": len(game.players[(game.players.index(name) + 1) % len(game.players)].hand),
+
+            # Game information
+            "game_won": game.game_won,
+            "round": game.round, 
         }
 
     def get_playable_actions(self):
@@ -123,8 +118,8 @@ def game_loop_pvc():
     """
     The game loop for player vs computer.
     """
-    pass
- 
+    
+
 if __name__ == "__main__":
     game = game.Game()
 
