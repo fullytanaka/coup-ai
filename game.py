@@ -75,7 +75,34 @@ class Game():
                 draw.remove(card)
             random.shuffle(self.deck)
             player.hand.append(self.deck.pop())
-            
+    
+    """
+    Game state information
+    """
+    def get_game_state(self, name):
+        """Returns a dictionary of the state from the perspective of the player."""
+        return {
+            # Player information
+            "hand": self.players.index(name).hand,
+            "coins": self.players.index(name).coins,
+            "influence_count": len(self.players.index(name).hand),
+
+            # Opponent information
+            "opponent_coins": self.players[(self.players.index(name) + 1) % len(self.players)].coins,
+            "opponent_influence_count": len(self.players[(self.players.index(name) + 1) % len(self.players)].hand),
+
+            # Game information
+            "round": self.round,
+            "game_won": self.game_won,
+        }
+        
+    def get_playable_actions(self):
+        """Returns a list of the actions that can be played."""
+        return self.playable_actions
+    """
+    Game actions
+    """
+
     def lose_card(self, target):
         """Target choose a card to lose."""
         print(f"{target} choose a card to lose by entering the index of the card.")
@@ -89,9 +116,7 @@ class Game():
                 print("Invalid input. Try again.")
             except ValueError:
                     print("Invalid input. Try again.")
-    """
-    Game actions
-    """
+
     def coup(self, player, target):
         """
         Coup a player.
