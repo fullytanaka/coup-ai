@@ -7,35 +7,6 @@ parser.add_argument("-p", "--player", help="Play against another player", action
 parser.add_argument("-c", "--computer", help="Play against the computer", action="store_true")
 args = parser.parse_args()
 
-class GameState:
-    """
-    The state of the game.
-    """ 
-    def get_player_state(self, name):
-        """
-        Returns a dictionary of the state from the perspective of the player.
-        """
-        return {
-            # Player information
-            "hand": game.players.index(name).hand,
-            "coins": game.players.index(name).coins,
-            "influence_count": len(game.players.index(name).hand),
-
-            # Opponent information
-            "opponent_coins": game.players[(game.players.index(name) + 1) % len(game.players)].coins,
-            "opponent_influence_count": len(game.players[(game.players.index(name) + 1) % len(game.players)].hand),
-
-            # Game information
-            "game_won": game.game_won,
-            "round": game.round, 
-        }
-
-    def get_playable_actions(self):
-        """
-        Returns a list of actions that can be played.
-        """
-        return game.playable_actions
-
 def game_loop_pvp():
     """
     The game loop for player vs player.
@@ -118,6 +89,7 @@ def game_loop_pvc():
     """
     The game loop for player vs computer.
     """
+
     
 
 if __name__ == "__main__":
