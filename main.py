@@ -89,25 +89,42 @@ def game_loop_pvc():
     """
     The game loop for player vs computer.
     """
+    while game.game_won == False:
+        game.round += 1
+        random.shuffle(game.deck)
+        print(f"==================== Round {game.round} ====================")
+        while True:
+            influence_count = [len(player.hand) for player in game.players]
 
-    
+            if min(influence_count) == 0: # Check if a player has no more influences
+                print(f"{game.players[influence_count.index(min(influence_count))]} has no more influences!")
+                print("Game over!")
+                print(f"{game.players[influence_count.index(max(influence_count))]} wins!")
+                game.game_won = True
+                break
+
+            print(game.get_game_state("Player"))
 
 if __name__ == "__main__":
     game = game.Game()
 
     print("Welcome to Coup!")
 
-    game.add_player("Player 1")
-    game.add_player("Player 2")
-
     if args.player:
         print("Player vs Player")
+        game.add_player("Player 1")
+        game.add_player("Player 2")
         game.initial_draw()
         game_loop_pvp()
     elif args.computer:
         print("Player vs Computer")
-        # game_loop_pvc()
+        game.add_player("Player")
+        game.add_player("Computer")
+        game.initial_draw_computer()
+        game_loop_pvc()
     else:
         print("Player vs Player")
+        game.add_player("Player 1")
+        game.add_player("Player 2")
         game.initial_draw()
         game_loop_pvp()

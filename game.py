@@ -75,12 +75,55 @@ class Game():
                 draw.remove(card)
             random.shuffle(self.deck)
             player.hand.append(self.deck.pop())
+
+    def initial_draw_computer(self):
+        """Initial draw if playing against a computer."""
+        # Player
+        random.shuffle(self.deck)
+        draw = self.deck[:3]
+        print(f"{self.players[0]} choose a card from {draw} by entering the index of the card.")
+        while True:
+            try:
+                card = int(input())
+                self.players[0].hand.append(draw[card])
+                print(f"{self.players[0]} chose {draw[card]}")
+                draw.pop(card)
+                break
+            except ValueError:
+                print("Invalid input. Try again.")
+        for card in draw:
+            self.deck.append(card)
+            draw.remove(card)
+        random.shuffle(self.deck)
+        self.players[0].hand.append(self.deck.pop())
+
+        # Computer
+        random.shuffle(self.deck)
+        draw = self.deck[:3]
+        print("Computer is choosing their initial card...")
+
+        # Computer will prioritise the duke, then the assassin, then a random card
+        if "duke" in draw:
+            card = draw.index("duke")
+        elif "assassin" in draw:
+            card = draw.index("assassin")
+        else:
+            card = random.randint(0, 2)
+        self.players[1].hand.append(draw[card])
+        print(f"{self.players[1]} chose {draw[card]}")
+        draw.pop(card)
+        for card in draw:
+            self.deck.append(card)
+            draw.remove(card)
+        random.shuffle(self.deck)
+        self.players[1].hand.append(self.deck.pop())
     
     """
-    Game state information
+    Imperfect game state information
     """
     def get_game_state(self, name):
         """Returns a dictionary of the state from the perspective of the player."""
+        print(self.players.index(name))
         return {
             # Player information
             "hand": self.players.index(name).hand,
@@ -94,15 +137,28 @@ class Game():
             # Game information
             "round": self.round,
             "game_won": self.game_won,
+            "playable_actions": self.playable_actions
         }
         
     def get_playable_actions(self):
         """Returns a list of the actions that can be played."""
         return self.playable_actions
+    
+    def get_next_state(self, state, action, player):
+        """Returns the state after the action is played."""
+        current_game_state = self.get_game_state(player)
+        if action in self.blockable_actions and action in self.challengeable_actions:
+            current_game_state["playable_actions"] = ["allow", "block", "challenge"]
+            return current_game_state
+        elif action in self.challengeable_actions:
+            current_game_state["playable_actions"] = ["allow", "challenge"]
+            return current_game_state
+        elif action in self.blockable_actions:
+            current_game_state["playable_actions"] = ["allow", "block"]
+            return current_game_state
     """
     Game actions
     """
-
     def lose_card(self, target):
         """Target choose a card to lose."""
         print(f"{target} choose a card to lose by entering the index of the card.")
