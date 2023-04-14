@@ -103,7 +103,35 @@ def game_loop_pvc():
                 game.game_won = True
                 break
 
-            print(game.get_game_state("Player"))
+            # Player chooses an action
+            game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
+            game.challenge_attempted = False
+            game.block_attempted = False
+
+            print(game.players[game.players.index("Player")].print_information())
+            while True:
+                try:
+                    action = input(f"Choose an action from {', '.join(game.playable_actions)}: ").lower().replace(" ", "_")
+                    if action not in game.playable_actions:
+                        raise ValueError
+                    break
+                except ValueError:
+                        print("Invalid input. Try again.")
+                except Exception as e:
+                    print(f"An error occurred: {e}")
+                    raise e
+                
+            print(f"Player chose {action}.")
+            if action in ["coup", "assassinate", "steal"]:
+                getattr(game, action)(game.players[game.players.index("Player")], game.players[(game.players.index("Player") + 1) % len(game.players)])
+            else:
+                getattr(game, action)(game.players[game.players.index("Player")])
+            break
+            
+        # Computer chooses an action
+        game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
+        print(game.get_game_state(game.players[game.players.index("Computer")]))
+
 
 if __name__ == "__main__":
     game = game.Game()

@@ -133,7 +133,7 @@ class Game():
 
             # Opponent information
             "opponent_coins": opponent.coins,
-            "opponent_influence_count": opponent.hand,
+            "opponent_influence_count": len(opponent.hand),
 
             # Game information
             "round": self.round,
