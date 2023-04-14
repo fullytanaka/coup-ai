@@ -31,9 +31,9 @@ class Game():
             """Return the name of the player."""
             return self.name
         
-        def __eq__(self, other):
-            """Return whether the player is equal to another player."""
-            return self.name == other.name
+        def __eq__(self, name):
+            """Return whether the player is equal to a name."""
+            return self.name == name
         
     def __init__(self):
         """Initialize the game."""
@@ -123,16 +123,17 @@ class Game():
     """
     def get_game_state(self, name):
         """Returns a dictionary of the state from the perspective of the player."""
-        print(self.players.index(name))
+        player = self.players[self.players.index(name)]
+        opponent = self.players[(self.players.index(name) + 1) % len(self.players)]
         return {
             # Player information
-            "hand": self.players.index(name).hand,
-            "coins": self.players.index(name).coins,
-            "influence_count": len(self.players.index(name).hand),
+            "hand": player.hand,
+            "coins": player.coins,
+            "influence_count": len(player.hand),
 
             # Opponent information
-            "opponent_coins": self.players[(self.players.index(name) + 1) % len(self.players)].coins,
-            "opponent_influence_count": len(self.players[(self.players.index(name) + 1) % len(self.players)].hand),
+            "opponent_coins": opponent.coins,
+            "opponent_influence_count": opponent.hand,
 
             # Game information
             "round": self.round,
