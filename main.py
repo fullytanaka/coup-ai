@@ -144,15 +144,9 @@ if __name__ == "__main__":
         game.add_player("Player 2")
         game.initial_draw()
         game_loop_pvp()
-    elif args.computer:
+    else:
         print("Player vs Computer")
         game.add_player("Player")
         game.add_player("Computer")
         game.initial_draw_computer()
         game_loop_pvc()
-    else:
-        print("Player vs Player")
-        game.add_player("Player 1")
-        game.add_player("Player 2")
-        game.initial_draw()
-        game_loop_pvp()
