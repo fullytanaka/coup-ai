@@ -121,8 +121,9 @@ def game_loop_pvc():
                 except Exception as e:
                     print(f"An error occurred: {e}")
                     raise e
-                
+
             print(f"Player chose {action}.")
+            game.current_action = action
             if action in ["coup", "assassinate", "steal"]:
                 getattr(game, action)(game.players[game.players.index("Player")], game.players[(game.players.index("Player") + 1) % len(game.players)])
             else:

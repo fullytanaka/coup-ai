@@ -41,6 +41,7 @@ class Game():
         self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
         self.round = 0
         self.turn = ""
+        self.current_action = ""
         self.game_won = False
         self.playable_actions = []
         self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
@@ -142,6 +143,7 @@ class Game():
             "playable_actions": self.playable_actions,
             "block_attempted": self.block_attempted,
             "challenge_attempted": self.challenge_attempted,
+            "current_action": self.current_action,
             "turn": self.turn
         }
         
