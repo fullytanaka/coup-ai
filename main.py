@@ -133,7 +133,8 @@ def game_loop_pvc():
         # Computer chooses an action
         game.turn = game.players[game.players.index("Computer")]
         game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
-        print(game.get_game_state(game.players[game.players.index("Computer")]))
+        current_state = game.get_game_state(game.players[game.players.index("Computer")])
+        print(game.get_next_state(current_state, "income", game.turn))
 
 
 if __name__ == "__main__":

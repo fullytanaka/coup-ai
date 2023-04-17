@@ -147,19 +147,13 @@ class Game():
             "turn": self.turn
         }
         
-    def get_playable_actions(self):
-        """Returns a list of the actions that can be played."""
-        return self.playable_actions
-    
     def get_next_state(self, state, action, player):
         """Returns the state after the action is played."""
-        current_game_state = self.get_game_state(player)
-        if action in self.blockable_actions and action in self.challengeable_actions:
-            current_game_state["playable_actions"] = ["allow", "block", "challenge"]
-        elif action in self.challengeable_actions:
-            current_game_state["playable_actions"] = ["allow", "challenge"]
-        elif action in self.blockable_actions:
-            current_game_state["playable_actions"] = ["allow", "block"]
+        current_game_state = state
+        match action:
+            case "income":
+                current_game_state["coins"] += 1
+        current_game_state["turn"] = self.players[(self.players.index(player) + 1) % len(self.players)]
         return current_game_state
     """
     Game actions
