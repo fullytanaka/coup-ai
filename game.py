@@ -42,8 +42,8 @@ class Game():
         self.round = 0
         self.game_won = False
         self.playable_actions = []
-        self.blockable_actions = ["tax", "assassinate", "steal", "foreign_aid"]
-        self.challengeable_actions = ["assassinate", "steal", "exchange", "block"]
+        self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
+        self.challengeable_actions = ["tax", "assassinate", "steal", "exchange", "block"]
         self.block_attempted = False
         self.challenge_attempted = False
 
