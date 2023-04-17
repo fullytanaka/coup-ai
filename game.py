@@ -42,8 +42,8 @@ class Game():
         self.round = 0
         self.game_won = False
         self.playable_actions = []
-        self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
-        self.challengeable_actions = ["tax", "assassinate", "steal", "exchange", "block"]
+        self.blockable_actions = ["tax", "assassinate", "steal", "foreign_aid"]
+        self.challengeable_actions = ["assassinate", "steal", "exchange", "block"]
         self.block_attempted = False
         self.challenge_attempted = False
 
@@ -150,13 +150,11 @@ class Game():
         current_game_state = self.get_game_state(player)
         if action in self.blockable_actions and action in self.challengeable_actions:
             current_game_state["playable_actions"] = ["allow", "block", "challenge"]
-            return current_game_state
         elif action in self.challengeable_actions:
             current_game_state["playable_actions"] = ["allow", "challenge"]
-            return current_game_state
         elif action in self.blockable_actions:
             current_game_state["playable_actions"] = ["allow", "block"]
-            return current_game_state
+        return current_game_state
     """
     Game actions
     """
