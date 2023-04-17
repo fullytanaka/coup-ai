@@ -40,6 +40,7 @@ class Game():
         self.players = []
         self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
         self.round = 0
+        self.turn = ""
         self.game_won = False
         self.playable_actions = []
         self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
@@ -138,7 +139,10 @@ class Game():
             # Game information
             "round": self.round,
             "game_won": self.game_won,
-            "playable_actions": self.playable_actions
+            "playable_actions": self.playable_actions,
+            "block_attempted": self.block_attempted,
+            "challenge_attempted": self.challenge_attempted,
+            "turn": self.turn
         }
         
     def get_playable_actions(self):

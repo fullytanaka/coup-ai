@@ -104,6 +104,7 @@ def game_loop_pvc():
                 break
 
             # Player chooses an action
+            game.turn = game.players[game.players.index("Player")]
             game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
             game.challenge_attempted = False
             game.block_attempted = False
@@ -129,6 +130,7 @@ def game_loop_pvc():
             break
             
         # Computer chooses an action
+        game.turn = game.players[game.players.index("Computer")]
         game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
         print(game.get_game_state(game.players[game.players.index("Computer")]))
 
