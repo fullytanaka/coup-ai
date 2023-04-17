@@ -151,6 +151,12 @@ class Game():
         """Returns the state after the action is played."""
         current_game_state = state
         match action:
+            case "coup":
+                if current_game_state["coins"] >= 7:
+                    current_game_state["coins"] -= 7
+                    current_game_state["opponent_influence_count"] -= 1
+                else:
+                    pass
             case "income":
                 current_game_state["coins"] += 1
         current_game_state["turn"] = self.players[(self.players.index(player) + 1) % len(self.players)]
