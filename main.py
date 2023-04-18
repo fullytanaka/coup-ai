@@ -2,6 +2,7 @@ import game
 import random
 import argparse
 import pprint
+import mcts
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--player", help="Play against another player", action="store_true")
@@ -109,7 +110,7 @@ def game_loop_pvc():
             game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
             game.challenge_attempted = False
             game.block_attempted = False
-            current_state = game.get_game_state(game.players[game.players.index("Player")])
+            current_state = mcts.get_game_state(game, "Player")
 
             # Player chooses an action
             print(game.players[game.players.index("Player")].print_information())
@@ -151,10 +152,12 @@ def game_loop_pvc():
             game.block_attempted = False
 
             # Computer chooses an action
-            game.current_action = "foreign_aid" # TODO: MCTS search for best action
-
-            current_state = game.get_game_state(game.players[game.players.index("Computer")])
-            pprint.PrettyPrinter(width=20).pprint(game.get_next_state(current_state, "", game.turn))
+            # TODO: MCTS search for best action
+            action = "foreign_aid"
+            game.current_action = action
+            
+            # current_state = mcts.get_game_state(game, "Computer") 
+            # pprint.PrettyPrinter(width=20).pprint(current_state) 
 
             print(f"Computer chose {game.current_action}.")
 
@@ -167,6 +170,7 @@ def game_loop_pvc():
 
 if __name__ == "__main__":
     game = game.Game()
+    mcts = mcts.MCTS()
 
     print("Welcome to Coup!")
 

@@ -121,52 +121,6 @@ class Game():
         self.players[1].hand.append(self.deck.pop())
     
     """
-    Imperfect game state information
-    """
-    def get_game_state(self, name):
-        """Returns a dictionary of the state from the perspective of the player."""
-        player = self.players[self.players.index(name)]
-        opponent = self.players[(self.players.index(name) + 1) % len(self.players)]
-        return {
-            # Player information
-            "hand": player.hand,
-            "coins": player.coins,
-            "influence_count": len(player.hand),
-
-            # Opponent information
-            "opponent_coins": opponent.coins,
-            "opponent_influence_count": len(opponent.hand),
-
-            # Game information
-            "round": self.round,
-            "game_won": self.game_won,
-            "playable_actions": self.playable_actions,
-            "block_attempted": self.block_attempted,
-            "challenge_attempted": self.challenge_attempted,
-            "current_action": self.current_action,
-            "turn": self.turn
-        }
-        
-    def get_next_state(self, state, response, player):
-        """Returns the state after the action is played."""
-        current_game_state = state
-        match state["current_action"]:
-            case "coup":
-                if current_game_state["coins"] >= 7:
-                    current_game_state["coins"] -= 7
-                    current_game_state["opponent_influence_count"] -= 1
-                else:
-                    pass
-            case "income":
-                current_game_state["coins"] += 1
-            case "foreign_aid":
-                if not state["block_attempted"]:
-                    state["playable_actions"] = ["allow", "block"]
-        
-        # Switch turns
-        current_game_state["turn"] = self.players[(self.players.index(player) + 1) % len(self.players)]
-        return current_game_state
-    """
     Game actions
     """
     def lose_card(self, target):
