@@ -72,7 +72,7 @@ class MCTS:
                                 getattr(game_temp, action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
                             case default:
                                 getattr(game_temp, action)(game_temp.players[game_temp.players.index(player)])
-                    if player.name == "Computer": # Since the computer is always second, it will always be the next round
+                    if player == "Computer": # Since the computer is always second, it will always be the next round
                         next_round_flag = True
     
             next_game_state = self.get_game_state(game_temp, player)
