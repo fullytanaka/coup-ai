@@ -153,7 +153,7 @@ def game_loop_pvc():
 
             # Computer chooses an action
             # TODO: MCTS search for best action
-            action = "foreign_aid"
+            action = "income"
             game.current_action = action
             
             current_state = mcts.get_game_state(game, "Computer") 
