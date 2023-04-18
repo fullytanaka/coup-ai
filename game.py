@@ -147,10 +147,10 @@ class Game():
             "turn": self.turn
         }
         
-    def get_next_state(self, state, action, player):
+    def get_next_state(self, state, response, player):
         """Returns the state after the action is played."""
         current_game_state = state
-        match action:
+        match state["current_action"]:
             case "coup":
                 if current_game_state["coins"] >= 7:
                     current_game_state["coins"] -= 7
@@ -159,6 +159,11 @@ class Game():
                     pass
             case "income":
                 current_game_state["coins"] += 1
+            case "foreign_aid":
+                if not state["block_attempted"]:
+                    state["playable_actions"] = ["allow", "block"]
+        
+        # Switch turns
         current_game_state["turn"] = self.players[(self.players.index(player) + 1) % len(self.players)]
         return current_game_state
     """
@@ -166,6 +171,18 @@ class Game():
     """
     def lose_card(self, target):
         """Target choose a card to lose."""
+        if target.name == "Computer":
+            # Computer will try to save Duke or Contessa. Otherwise, choose a random card
+            if "duke" in target.hand:
+                card = (target.hand.index("duke") + 1) % len(target.hand)
+            elif "contessa" in target.hand:
+                card = (target.hand.index("contessa") + 1) % len(target.hand)
+            else:
+                card = random.randint(0, len(target.hand) - 1)
+            print(f"{target} lost {target.hand[card]}")
+            target.hand.pop(card)
+            return
+        
         print(f"{target} choose a card to lose by entering the index of the card.")
         while True:
             try:
