@@ -1,6 +1,7 @@
 import game
 import random
 import argparse
+import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--player", help="Play against another player", action="store_true")
@@ -103,13 +104,16 @@ def game_loop_pvc():
                 game.game_won = True
                 break
 
-            # Player chooses an action
+            # Player Turn
             game.turn = game.players[game.players.index("Player")]
             game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
             game.challenge_attempted = False
             game.block_attempted = False
+            current_state = game.get_game_state(game.players[game.players.index("Player")])
 
+            # Player chooses an action
             print(game.players[game.players.index("Player")].print_information())
+            print(f"Your opponent has {current_state['opponent_influence_count']} influence(s) and {current_state['opponent_coins']} coins.")
             while True:
                 try:
                     action = input(f"Choose an action from {', '.join(game.playable_actions)}: ").lower().replace(" ", "_")
@@ -121,21 +125,44 @@ def game_loop_pvc():
                 except Exception as e:
                     print(f"An error occurred: {e}")
                     raise e
-
-            print(f"Player chose {action}.")
+                
             game.current_action = action
+            print(f"Player chose {action}.")
+
+            # Ask computer to block/challenge
+            if action in game.challengeable_actions and action in game.blockable_actions:
+                game.playable_actions = ["allow", "challenge", "block"]
+            elif action in game.challengeable_actions:
+                game.playable_actions = ["allow", "challenge"]
+            elif action in game.blockable_actions:
+                game.playable_actions = ["allow", "block"]
+
+            # TODO: MCTS search for best action
+            
             if action in ["coup", "assassinate", "steal"]:
                 getattr(game, action)(game.players[game.players.index("Player")], game.players[(game.players.index("Player") + 1) % len(game.players)])
             else:
                 getattr(game, action)(game.players[game.players.index("Player")])
-            break
             
-        # Computer chooses an action
-        game.turn = game.players[game.players.index("Computer")]
-        game.players[1].coins = 7
-        game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
-        current_state = game.get_game_state(game.players[game.players.index("Computer")])
-        print(game.get_next_state(current_state, "coup", game.turn))
+            # Computer Turn
+            game.turn = game.players[game.players.index("Computer")]
+            game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
+            game.challenge_attempted = False
+            game.block_attempted = False
+
+            # Computer chooses an action
+            game.current_action = "foreign_aid" # TODO: MCTS search for best action
+
+            current_state = game.get_game_state(game.players[game.players.index("Computer")])
+            pprint.PrettyPrinter(width=20).pprint(game.get_next_state(current_state, "", game.turn))
+
+            print(f"Computer chose {game.current_action}.")
+
+            if action in ["coup", "assassinate", "steal"]:
+                getattr(game, action)(game.players[game.players.index("Computer")], game.players[(game.players.index("Computer") + 1) % len(game.players)])
+            else:
+                getattr(game, action)(game.players[game.players.index("Computer")])
+            break
 
 
 if __name__ == "__main__":
