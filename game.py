@@ -281,6 +281,9 @@ class Game():
                             target.remove_card("captain")
                             self.deck.append("captain")
                         target.add_card(self.deck.pop())
+                    else:
+                        print(f"{target} didn't have the ambassador or captain and the challenge was successful!")
+                        self.lose_card(target)
                 case "foreign_aid":
                     if "duke" in target.hand:
                         print(f"{target} had the duke and blocked the foreign aid! The challenge was unsuccessful!")
@@ -288,6 +291,9 @@ class Game():
                         target.remove_card("duke")
                         self.deck.append("duke")
                         target.add_card(self.deck.pop())
+                    else:
+                        print(f"{target} didn't have duke and the challenge was successful!")
+                        self.lose_card(target)
                 case default:
                     print(f"{player} did not have the card to block the action! The challenge was unsuccessful!")
                     self.lose_card(target)
