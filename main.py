@@ -156,8 +156,9 @@ def game_loop_pvc():
             action = "foreign_aid"
             game.current_action = action
             
-            # current_state = mcts.get_game_state(game, "Computer") 
-            # pprint.PrettyPrinter(width=20).pprint(current_state) 
+            current_state = mcts.get_game_state(game, "Computer") 
+            next_state = mcts.get_next_state(game, "Computer", action)
+            pprint.PrettyPrinter(width=20).pprint(next_state) 
 
             print(f"Computer chose {game.current_action}.")
 

@@ -1,3 +1,22 @@
+from copy import deepcopy
+from contextlib import contextmanager
+import sys, os
+
+# Code from: https://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
+@contextmanager
+def suppress_stdout():
+    """
+    Suppresses stdout for the duration of the context. 
+    This is for copying the game state and playing out an action without printing to the console.
+    """
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
+
 class MCTS:
     
     def __init__(self):
@@ -30,21 +49,18 @@ class MCTS:
             "turn": game.turn
         }
         
-    def get_next_state(self, state, response, player):
+    def get_next_state(self, game, player, action):
         """Returns the state after the action is played."""
-        current_game_state = state
-        match state["current_action"]:
-            case "coup":
-                if current_game_state["coins"] >= 7:
-                    current_game_state["coins"] -= 7
-                    current_game_state["opponent_influence_count"] -= 1
-                else:
-                    pass
-            case "income":
-                current_game_state["coins"] += 1
-            case "foreign_aid":
-                if not state["block_attempted"]:
-                    state["playable_actions"] = ["allow", "block"]     
-        # Switch turns
-        current_game_state["turn"] = self.game.players[(self.game.players.index(player) + 1) % len(self.players)]
-        return current_game_state
+        with suppress_stdout():
+            game_temp = deepcopy(game)
+            match action:
+                case "coup" | "assassinate" | "steal":
+                    getattr(game_temp, action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
+                case _:
+                    getattr(game_temp, action)(game_temp.players[game_temp.players.index(player)])
+            next_game_state = self.get_game_state(game_temp, player)
+
+            # Swap turn and increase round
+            next_game_state["turn"] = game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)]
+            next_game_state["round"] += 1
+            return next_game_state
