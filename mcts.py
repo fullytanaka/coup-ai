@@ -56,12 +56,11 @@ class MCTS:
             match action:
                 case "coup" | "assassinate" | "steal":
                     getattr(game_temp, action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
-                    next_game_state["round"] += 1
                 case _:
                     getattr(game_temp, action)(game_temp.players[game_temp.players.index(player)])
-                    next_game_state["round"] += 1
             next_game_state = self.get_game_state(game_temp, player)
 
             # Swap turn and increase round
             next_game_state["turn"] = game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)]
+            next_game_state["round"] += 1
             return next_game_state
