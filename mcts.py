@@ -52,15 +52,33 @@ class MCTS:
     def get_next_state(self, game, player, action):
         """Returns the state after the action is played."""
         with suppress_stdout():
+            next_round_flag = False
             game_temp = deepcopy(game)
             match action:
-                case "coup" | "assassinate" | "steal":
-                    getattr(game_temp, action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
-                case _:
-                    getattr(game_temp, action)(game_temp.players[game_temp.players.index(player)])
+                case "block":
+                    game_temp.playable_actions = ["allow", "challenge"]
+                    game_temp.block_attempted = True
+                case "challenge":
+                    game_temp.challenge_attempted = True
+                    if game_temp.block_attempted:
+                        game_temp.block(game.players[game.players.index(player)], game.players[(game.players.index(player) + 1) % len(game.players)], game_temp.current_action)
+                case default:
+                    challenge_successful = False
+                    if game_temp.challenge_attempted:
+                        challenge_successful = game_temp.challenge(game.players[game.players.index(player)], game.players[(game.players.index(player) + 1) % len(game.players)], game_temp.current_action)
+                    if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
+                        match game_temp.current_action:
+                            case "coup" | "assassinate" | "steal":
+                                getattr(game_temp, action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
+                            case default:
+                                getattr(game_temp, action)(game_temp.players[game_temp.players.index(player)])
+                    if player.name == "Computer": # Since the computer is always second, it will always be the next round
+                        next_round_flag = True
+    
             next_game_state = self.get_game_state(game_temp, player)
 
             # Swap turn and increase round
             next_game_state["turn"] = game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)]
-            next_game_state["round"] += 1
+            if next_round_flag:
+                next_game_state["round"] += 1
             return next_game_state
