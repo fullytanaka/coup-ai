@@ -12,6 +12,8 @@ args = parser.parse_args()
 def game_loop_pvp():
     """
     The game loop for player vs player.
+
+    This is largely for debugging purposes. It's not very fun to play.
     """
     while game.game_won == False:
         game.round += 1
@@ -91,7 +93,6 @@ def game_loop_pvc():
     """
     The game loop for player vs computer.
     """
-
     def get_playable_actions(action):
         """
         Returns a list of playable actions based on the current action.
