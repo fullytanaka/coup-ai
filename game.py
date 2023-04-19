@@ -38,6 +38,7 @@ class Game():
     def __init__(self):
         """Initialize the game."""
         self.players = []
+        self.is_simulation = False
         self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
         self.round = 0
         self.turn = ""
@@ -137,17 +138,22 @@ class Game():
             target.hand.pop(card)
             return
         
-        print(f"{target} choose a card to lose by entering the index of the card.")
-        while True:
-            try:
-                card = int(input())
-                print(f"{target} lost {target.hand[card]}")
-                target.hand.pop(card)
-                break
-            except IndexError:
-                print("Invalid input. Try again.")
-            except ValueError:
+        if not self.is_simulation:
+            print(f"{target} choose a card to lose by entering the index of the card.")
+            while True:
+                try:
+                    card = int(input())
+                    print(f"{target} lost {target.hand[card]}")
+                    target.hand.pop(card)
+                    break
+                except IndexError:
                     print("Invalid input. Try again.")
+                except ValueError:
+                        print("Invalid input. Try again.")
+        else:
+            card = random.randint(0, len(target.hand) - 1)
+            print(f"{target} lost {target.hand[card]}")
+            target.hand.pop(card)
 
     def coup(self, player, target):
         """

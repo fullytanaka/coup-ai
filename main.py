@@ -148,6 +148,8 @@ def game_loop_pvc():
                     pass
         
         print(f"Computer chooses to {response}")
+        next_state = mcts.get_next_state(game, "Player", "challenge")
+        pprint.PrettyPrinter(width=20).pprint(next_state) 
         # If computer blocks, player can challenge the block
 
         if game.block_attempted:
@@ -176,13 +178,14 @@ def game_loop_pvc():
         game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
         game.challenge_attempted = False
         game.block_attempted = False
+        game.players[game.players.index("Player")].hand = []
 
         # Computer chooses an action
         # TODO: MCTS search for best action
         action = "income"
         game.current_action = action
         
-        next_state = mcts.get_next_state(game, "Computer", "income")
+        next_state = mcts.get_next_state(game, "Computer", "tax")
         pprint.PrettyPrinter(width=20).pprint(next_state) 
         
         # current_state = mcts.get_game_state(game, "Computer") 

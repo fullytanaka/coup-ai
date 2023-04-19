@@ -18,9 +18,6 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 class MCTS:
-    
-    def __init__(self):
-        pass
 
     """
     Imperfect game state information
@@ -41,24 +38,31 @@ class MCTS:
 
             # Game information
             "round": game.round,
+            "turn": game.turn,
             "game_won": game.game_won,
+            "winner": None,
             "playable_actions": game.playable_actions,
             "block_attempted": game.block_attempted,
             "challenge_attempted": game.challenge_attempted,
             "current_action": game.current_action,
-            "turn": game.turn
         }
         
     def get_next_state(self, game, player, action):
         """
-        Returns the state after the action is played.
-        
-        TODO: Parameterize lose_card
+        Returns the state after an action is played.
         """
         with suppress_stdout():
-            next_round_flag = False
             game_temp = deepcopy(game)
+            game_temp.is_simulation = True
             match action:
+                case "coup" | "income" | "foreign_aid" | "tax" | "steal" | "assassinate" | "exchange":
+                    game_temp.current_action = action
+                    if action in game_temp.challengeable_actions and action in game_temp.blockable_actions:
+                        game_temp.playable_actions = ["allow","block", "challenge"]
+                    elif action in game_temp.challengeable_actions:
+                        game_temp.playable_actions = ["allow", "challenge"]
+                    elif action in game_temp.blockable_actions:
+                        game_temp.playable_actions = ["allow", "block"]
                 case "block":
                     game_temp.playable_actions = ["allow", "challenge"]
                     game_temp.block_attempted = True
@@ -85,6 +89,14 @@ class MCTS:
 
             # Swap turn and increase round if necessary
             next_game_state["turn"] = game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)]
-            if not game_temp.block_attempted and not game_temp.challenge_attempted:
+            if not game_temp.block_attempted and not game_temp.challenge_attempted and game_temp.playable_actions == ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]:
                 next_game_state["round"] += 1
+
+            # Check who is the winner
+            if next_game_state["opponent_influence_count"] == 0:
+                next_game_state["winner"] = player
+                next_game_state["game_won"] = True
+            if next_game_state["influence_count"] == 0:
+                next_game_state["winner"] = next_game_state["turn"]
+                next_game_state["game_won"] = True
             return next_game_state
