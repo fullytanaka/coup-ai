@@ -228,7 +228,7 @@ def game_loop_pvc():
 
 if __name__ == "__main__":
     game = game.Game()
-    mcts = mcts.MCTS()
+    # mcts = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000})
 
     print("Welcome to Coup!")
 

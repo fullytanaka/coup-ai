@@ -1,8 +1,7 @@
 from copy import deepcopy
 from contextlib import contextmanager
 import sys, os
-import math
-import random
+import numpy as np
 
 # Code from: https://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
 @contextmanager
@@ -19,8 +18,16 @@ def suppress_stdout():
         finally:
             sys.stdout = old_stdout
 
-class MCTS:
+class Node:
+    """
+    MCTS node
+    """
+    pass
 
+class MCTS:
+    def __init__(self, game, args):
+        self.game = game
+        self.args = args
     """
     Imperfect game state information
     """
