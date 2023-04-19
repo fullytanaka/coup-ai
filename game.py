@@ -323,7 +323,6 @@ class Game():
                     player.remove_card("duke")
                     player.add_card(self.deck.pop())
                     self.deck.append("duke")
-                    player.add_card(self.deck.pop())
                     return False
                 else:
                     print(f"{player} did not have the duke! The challenge was successful!")

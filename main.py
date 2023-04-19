@@ -129,7 +129,6 @@ def game_loop_pvc():
         game.current_action = action
         print(f"Player chose {action}.")
 
-        # Ask computer to block/challenge
         if action in game.challengeable_actions and action in game.blockable_actions:
             game.playable_actions = ["allow", "challenge", "block"]
         elif action in game.challengeable_actions:
@@ -137,6 +136,7 @@ def game_loop_pvc():
         elif action in game.blockable_actions:
             game.playable_actions = ["allow", "block"]
 
+        # Ask computer to block/challenge
         if action in game.challengeable_actions or action in game.blockable_actions:
             response = "block" # TODO: MCTS search for best action
             match response:
@@ -148,10 +148,8 @@ def game_loop_pvc():
                     pass
         
         print(f"Computer chooses to {response}")
-        next_state = mcts.get_next_state(game, "Player", "challenge")
-        pprint.PrettyPrinter(width=20).pprint(next_state) 
+        
         # If computer blocks, player can challenge the block
-
         if game.block_attempted:
             game.playable_actions = ["allow", "challenge"]
             match input(f"{game.players[game.players.index('Player')]}, choose to challenge or allow: "):
@@ -178,27 +176,54 @@ def game_loop_pvc():
         game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
         game.challenge_attempted = False
         game.block_attempted = False
-        game.players[game.players.index("Player")].hand = []
 
         # Computer chooses an action
-        # TODO: MCTS search for best action
-        action = "income"
+        action = "tax" # TODO: MCTS search for best action
+        print(f"Computer chose {action}.")
         game.current_action = action
         
-        next_state = mcts.get_next_state(game, "Computer", "tax")
+        if action in game.challengeable_actions and action in game.blockable_actions:
+            game.playable_actions = ["allow", "challenge", "block"]
+        elif action in game.challengeable_actions:
+            game.playable_actions = ["allow", "challenge"]
+        elif action in game.blockable_actions:
+            game.playable_actions = ["allow", "block"]
+
+        next_state = mcts.get_next_state(game, "Player", "challenge")
         pprint.PrettyPrinter(width=20).pprint(next_state) 
-        
-        # current_state = mcts.get_game_state(game, "Computer") 
-        # next_state = mcts.get_next_state(game, "Computer", action)
-        # pprint.PrettyPrinter(width=20).pprint(next_state) 
+            
+        # Ask player to block/challenge
+        if action in game.challengeable_actions or action in game.blockable_actions:
+            print(f"Player, choose to {', '.join(game.playable_actions)}: ")
+            match input().lower().replace(" ", "_"):
+                case "challenge":
+                    game.challenge_attempted = True
+                case "block":
+                    game.block_attempted = True
+                case default:
+                    pass
 
-        # print(f"Computer chose {game.current_action}.")
-
-        # if action in ["coup", "assassinate", "steal"]:
-        #     getattr(game, action)(game.players[game.players.index("Computer")], game.players[(game.players.index("Computer") + 1) % len(game.players)])
-        # else:
-        #     getattr(game, action)(game.players[game.players.index("Computer")])
-        # break
+        # If player blocks, computer can challenge the block
+        if game.block_attempted:
+            game.playable_actions = ["allow", "challenge"]
+            response = "allow" # TODO: MCTS search for best action
+            match response:
+                case "challenge":
+                    game.challenge_attempted = True
+                case default:
+                    pass
+            print(action)
+            game.block(game.players[game.players.index('Computer')], game.players[(game.players.index('Computer') + 1) % len(game.players)], action)
+        else: # Action is allowed
+            challenge_successful = False
+            if game.challenge_attempted:
+                challenge_successful = game.challenge(game.players[game.players.index('Computer')], game.players[(game.players.index('Computer') + 1) % len(game.players)], action)
+            if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
+                match game.current_action:
+                    case "coup" | "assassinate" | "steal":
+                        getattr(game, action)(game.players[game.players.index("Computer")], game.players[(game.players.index("Computer") + 1) % len(game.players)])
+                    case default:
+                        getattr(game, action)(game.players[game.players.index("Computer")])
 
 
 if __name__ == "__main__":

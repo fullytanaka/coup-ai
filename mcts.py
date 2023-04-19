@@ -71,6 +71,17 @@ class MCTS:
                     game_temp.challenge_attempted = True
                     if game_temp.block_attempted:
                         game_temp.block(game_temp.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)], game_temp.current_action)
+                    else:
+                        challenge_successful = game_temp.challenge(game_temp.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)], game_temp.current_action)
+                        if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
+                            match game_temp.current_action:
+                                case "coup" | "assassinate" | "steal":
+                                    getattr(game_temp, game_temp.current_action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
+                                case default:
+                                    getattr(game_temp, game_temp.current_action)(game_temp.players[game_temp.players.index(player)])
+                        # Reset flags
+                        game_temp.challenge_attempted = False
+                        game_temp.block_attempted = False
                 case default:
                     challenge_successful = False
                     if game_temp.challenge_attempted:
@@ -78,9 +89,9 @@ class MCTS:
                     if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
                         match game_temp.current_action:
                             case "coup" | "assassinate" | "steal":
-                                getattr(game_temp, action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
+                                getattr(game_temp, game_temp.current_action)(game.players[game_temp.players.index(player)], game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)])
                             case default:
-                                getattr(game_temp, action)(game_temp.players[game_temp.players.index(player)])
+                                getattr(game_temp, game_temp.current_action)(game_temp.players[game_temp.players.index(player)])
                     # Reset flags
                     game_temp.challenge_attempted = False
                     game_temp.block_attempted = False
@@ -97,6 +108,6 @@ class MCTS:
                 next_game_state["winner"] = player
                 next_game_state["game_won"] = True
             if next_game_state["influence_count"] == 0:
-                next_game_state["winner"] = next_game_state["turn"]
+                next_game_state["winner"] = game_temp.players[(game_temp.players.index(player) + 1) % len(game_temp.players)]
                 next_game_state["game_won"] = True
             return next_game_state
