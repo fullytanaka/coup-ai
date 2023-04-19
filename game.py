@@ -1,4 +1,22 @@
 import random
+from copy import deepcopy
+from contextlib import contextmanager
+import sys, os
+
+# Code from: https://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
+@contextmanager
+def suppress_stdout():
+    """
+    Suppresses stdout for the duration of the context. 
+    This is for copying the game state and playing out an action without printing to the console.
+    """
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 class Game():
     """Game of Coup."""
@@ -121,6 +139,39 @@ class Game():
         random.shuffle(self.deck)
         self.players[1].hand.append(self.deck.pop())
     
+    def get_playable_actions(self, action):
+        """
+        Returns a list of playable actions based on the current action.
+        """
+        if action in self.challengeable_actions and action in self.blockable_actions:
+            return ["allow", "challenge", "block"]
+        elif action in self.challengeable_actions:
+            return ["allow", "challenge"]
+        elif action in self.blockable_actions:
+            return ["allow", "block"]
+        else:
+            return ["allow"]
+        
+    def process_action_response(self, response):
+        """
+        Processes the response to the action
+        """
+        match response:
+            case "challenge":
+                self.challenge_attempted = True
+            case "block":
+                self.block_attempted = True
+                self.playable_actions = ["allow", "challenge"]
+            case default:
+                pass
+
+    def process_block_response(self, response):
+        match response:
+            case "challenge":
+                response = "challenge"
+                self.challenge_attempted = True
+            case default:
+                pass
     """
     Game actions
     """
@@ -383,3 +434,74 @@ class Game():
                         getattr(self, action)(player, target)
                     case default:
                         getattr(self, action)(player)
+    
+    """
+    Imperfect game state information
+    """
+    def get_game_state(self, name):
+        """
+        Returns a dictionary of the state from the perspective of the player.
+        """
+        player = self.players[self.players.index(name)]
+        opponent = self.players[(self.players.index(name) + 1) % len(self.players)]
+        return {
+            # Player information
+            "hand": player.hand,
+            "coins": player.coins,
+            "influence_count": len(player.hand),
+
+            # Opponent information
+            "opponent_coins": opponent.coins,
+            "opponent_influence_count": len(opponent.hand),
+
+            # Game information
+            "round": self.round,
+            "turn": self.turn,
+            "game_won": self.game_won,
+            "winner": None,
+            "playable_actions": self.playable_actions,
+            "block_attempted": self.block_attempted,
+            "challenge_attempted": self.challenge_attempted,
+            "current_action": self.current_action,
+        }
+    
+    def get_next_state(self, game, player, action):
+        """
+        Returns the state after an action is played.
+        """
+        with suppress_stdout():
+            temp = deepcopy(game)
+            temp.is_simulation = True
+            opponent = temp.players[(temp.players.index(player) + 1) % len(temp.players)]
+            match action:
+                case "coup" | "income" | "foreign_aid" | "tax" | "steal" | "assassinate" | "exchange":
+                    temp.current_action = action
+                    temp.get_playable_actions(action)
+                case "block":
+                    temp.playable_actions = ["allow", "challenge"]
+                    temp.block_attempted = True
+                case "challenge":
+                    temp.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
+                    temp.challenge_attempted = True
+                    temp.play_action(player, opponent, temp.current_action)
+                case default:
+                    temp.play_action(player, opponent, action)
+                    # Reset flags
+                    temp.challenge_attempted = False
+                    temp.block_attempted = False
+    
+            next_game_state = temp.get_game_state(player)
+
+            # Swap turn and increase round if necessary
+            next_game_state["turn"] = opponent
+            if not temp.block_attempted and not temp.challenge_attempted and temp.playable_actions == ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]:
+                next_game_state["round"] += 1
+
+            # Check who is the winner
+            if next_game_state["opponent_influence_count"] == 0:
+                next_game_state["winner"] = player
+                next_game_state["game_won"] = True
+            if next_game_state["influence_count"] == 0:
+                next_game_state["winner"] = opponent
+                next_game_state["game_won"] = True
+            return next_game_state

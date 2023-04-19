@@ -93,37 +93,6 @@ def game_loop_pvc():
     """
     The game loop for player vs computer.
     """
-    def get_playable_actions(action):
-        """
-        Returns a list of playable actions based on the current action.
-        """
-        if action in game.challengeable_actions and action in game.blockable_actions:
-            return ["allow", "challenge", "block"]
-        elif action in game.challengeable_actions:
-            return ["allow", "challenge"]
-        elif action in game.blockable_actions:
-            return ["allow", "block"]
-    
-    def process_action_response(response):
-        """
-        Processes the response from the computer.
-        """
-        match response:
-            case "challenge":
-                game.challenge_attempted = True
-            case "block":
-                game.block_attempted = True
-                game.playable_actions = ["allow", "challenge"]
-            case default:
-                pass
-    
-    def process_block_response(response):
-        match response:
-            case "challenge":
-                response = "challenge"
-                game.challenge_attempted = True
-            case default:
-                pass
     
     def check_win(): 
         influence_count = [len(player.hand) for player in game.players]
@@ -170,17 +139,17 @@ def game_loop_pvc():
             
         game.current_action = action
         print(f"Player chose {action}.")
-
+        
         # Ask computer to block/challenge
-        game.playable_actions = get_playable_actions(action)
+        game.playable_actions = game.get_playable_actions(action)
         response = "allow" # TODO: MCTS search for best action
         print(f"Computer chooses to {response}")
-        process_action_response(response)
+        game.process_action_response(response)
 
         # If computer blocks, ask player to challenge or allow
         if game.block_attempted:
             response = input(f"{game.players[game.players.index('Player')]}, choose to challenge or allow: ")
-            process_block_response(response)
+            game.process_block_response(response)
 
         # Play action
         game.play_action(player, computer, action)
@@ -201,15 +170,15 @@ def game_loop_pvc():
         game.current_action = action
                     
         # Ask player to block/challenge
-        game.playable_actions = get_playable_actions(action)
+        game.playable_actions = game.get_playable_actions(action)
         print(f"Player, choose to {', '.join(game.playable_actions)}: ")
         response = input().lower().replace(" ", "_")
-        process_action_response(response)
+        game.process_action_response(response)
 
         # If player blocks, ask computer to challenge or allow
         if game.block_attempted:
             response = "challenge" # TODO: MCTS search for best action
-            process_block_response(response)
+            game.process_block_response(response)
 
         # Play action
         game.play_action(computer, player, action)
