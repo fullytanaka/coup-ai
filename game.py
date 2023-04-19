@@ -505,3 +505,15 @@ class Game():
                 next_game_state["winner"] = opponent
                 next_game_state["game_won"] = True
             return next_game_state
+                
+    def get_winner_and_terminated(self, state):
+        """
+        Returns the winner and whether the game is terminated.
+        """
+        return state["winner"], state["game_won"]
+
+    def get_opponent(self, player):
+        """
+        Returns the opponent of the player.
+        """
+        return self.players[(self.players.index(player) + 1) % len(self.players)]
