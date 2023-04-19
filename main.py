@@ -91,29 +91,70 @@ def game_loop_pvc():
     """
     The game loop for player vs computer.
     """
-    while game.game_won == False:
-        game.round += 1
-        random.shuffle(game.deck)
-        print(f"==================== Round {game.round} ====================")
 
+    def get_playable_actions(action):
+        """
+        Returns a list of playable actions based on the current action.
+        """
+        if action in game.challengeable_actions and action in game.blockable_actions:
+            return ["allow", "challenge", "block"]
+        elif action in game.challengeable_actions:
+            return ["allow", "challenge"]
+        elif action in game.blockable_actions:
+            return ["allow", "block"]
+    
+    def process_action_response(response):
+        """
+        Processes the response from the computer.
+        """
+        match response:
+            case "challenge":
+                game.challenge_attempted = True
+            case "block":
+                game.block_attempted = True
+                game.playable_actions = ["allow", "challenge"]
+            case default:
+                pass
+    
+    def process_block_response(response):
+        match response:
+            case "challenge":
+                response = "challenge"
+                game.challenge_attempted = True
+            case default:
+                pass
+    
+    def check_win(): 
         influence_count = [len(player.hand) for player in game.players]
         if min(influence_count) == 0: # Check if a player has no more influences
-            print(f"{game.players[influence_count.index(min(influence_count))]} has no more influences!")
-            print("Game over!")
-            print(f"{game.players[influence_count.index(max(influence_count))]} wins!")
-            game.game_won = True
-            break
+            print('!' * 80)
+            print(f"{game.players[influence_count.index(min(influence_count))]} has no more influences!".center(80))
+            print("Game over!".center(80))
+            print(f"{game.players[influence_count.index(max(influence_count))]} wins!".center(80))
+            print('!' * 80)
+            return True
+        return False
+        
+    player = game.players[game.players.index("Player")]
+    computer = game.players[game.players.index("Computer")]    
+    while True:
+        game.round += 1
+        random.shuffle(game.deck)
+        print(f" Round {game.round} ".center(80, "="))
 
         # Player's Action Turn
-        game.turn = game.players[game.players.index("Player")]
+        game.turn = player
         game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
         game.challenge_attempted = False
         game.block_attempted = False
+        print(f" {game.turn}'s turn ".center(80, "."))
+        print('#' * 80)
+        print(player.print_information())
+        # print(computer.print_information()) # Debug
+        print(f"Your opponent has {len(computer.hand)} influence(s) and {computer.coins} coins.")
+        print('#' * 80)
 
-        # Player chooses an action
-        print(game.players[game.players.index("Player")].print_information())
-        print(game.players[(game.players.index("Player") + 1) % len(game.players)].print_information())
-        print(f"Your opponent has {len(game.players[(game.players.index('Player') + 1) % len(game.players)].hand)} influence(s) and {game.players[(game.players.index('Player') + 1) % len(game.players)].coins} coins.")
+        # Player chooses an action        
         while True:
             try:
                 action = input(f"Choose an action from {', '.join(game.playable_actions)}: ").lower().replace(" ", "_")
@@ -129,50 +170,26 @@ def game_loop_pvc():
         game.current_action = action
         print(f"Player chose {action}.")
 
-        if action in game.challengeable_actions and action in game.blockable_actions:
-            game.playable_actions = ["allow", "challenge", "block"]
-        elif action in game.challengeable_actions:
-            game.playable_actions = ["allow", "challenge"]
-        elif action in game.blockable_actions:
-            game.playable_actions = ["allow", "block"]
-
         # Ask computer to block/challenge
-        if action in game.challengeable_actions or action in game.blockable_actions:
-            response = "block" # TODO: MCTS search for best action
-            match response:
-                case "challenge":
-                    game.challenge_attempted = True
-                case "block":
-                    game.block_attempted = True
-                case default:
-                    pass
-        
+        game.playable_actions = get_playable_actions(action)
+        response = "allow" # TODO: MCTS search for best action
         print(f"Computer chooses to {response}")
-        
-        # If computer blocks, player can challenge the block
+        process_action_response(response)
+
+        # If computer blocks, ask player to challenge or allow
         if game.block_attempted:
-            game.playable_actions = ["allow", "challenge"]
-            match input(f"{game.players[game.players.index('Player')]}, choose to challenge or allow: "):
-                case "challenge":
-                    response = "challenge"
-                    game.challenge_attempted = True
-                case default:
-                    pass
-            print(action)
-            game.block(game.players[game.players.index('Player')], game.players[(game.players.index('Player') + 1) % len(game.players)], action)
-        else: # Action is allowed
-            challenge_successful = False
-            if game.challenge_attempted:
-                challenge_successful = game.challenge(game.players[game.players.index('Player')], game.players[(game.players[game.players.index('Player')] + 1) % len(game.players)], action)
-            if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
-                match game.current_action:
-                    case "coup" | "assassinate" | "steal":
-                        getattr(game, action)(game.players[game.players.index("Player")], game.players[(game.players.index("Player") + 1) % len(game.players)])
-                    case default:
-                        getattr(game, action)(game.players[game.players.index("Player")])
+            response = input(f"{game.players[game.players.index('Player')]}, choose to challenge or allow: ")
+            process_block_response(response)
+
+        # Play action
+        game.play_action(player, computer, action)
+        game.game_won = check_win()
+        if game.game_won:
+            break
 
         # Computer's Action Turn
-        game.turn = game.players[game.players.index("Computer")]
+        game.turn = computer
+        print(f" {game.turn}'s turn ".center(80, "."))
         game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
         game.challenge_attempted = False
         game.block_attempted = False
@@ -181,49 +198,24 @@ def game_loop_pvc():
         action = "tax" # TODO: MCTS search for best action
         print(f"Computer chose {action}.")
         game.current_action = action
-        
-        if action in game.challengeable_actions and action in game.blockable_actions:
-            game.playable_actions = ["allow", "challenge", "block"]
-        elif action in game.challengeable_actions:
-            game.playable_actions = ["allow", "challenge"]
-        elif action in game.blockable_actions:
-            game.playable_actions = ["allow", "block"]
-
-        next_state = mcts.get_next_state(game, "Player", "challenge")
-        pprint.PrettyPrinter(width=20).pprint(next_state) 
-            
+                    
         # Ask player to block/challenge
-        if action in game.challengeable_actions or action in game.blockable_actions:
-            print(f"Player, choose to {', '.join(game.playable_actions)}: ")
-            match input().lower().replace(" ", "_"):
-                case "challenge":
-                    game.challenge_attempted = True
-                case "block":
-                    game.block_attempted = True
-                case default:
-                    pass
+        game.playable_actions = get_playable_actions(action)
+        print(f"Player, choose to {', '.join(game.playable_actions)}: ")
+        response = input().lower().replace(" ", "_")
+        process_action_response(response)
 
-        # If player blocks, computer can challenge the block
+        # If player blocks, ask computer to challenge or allow
         if game.block_attempted:
-            game.playable_actions = ["allow", "challenge"]
-            response = "allow" # TODO: MCTS search for best action
-            match response:
-                case "challenge":
-                    game.challenge_attempted = True
-                case default:
-                    pass
-            print(action)
-            game.block(game.players[game.players.index('Computer')], game.players[(game.players.index('Computer') + 1) % len(game.players)], action)
-        else: # Action is allowed
-            challenge_successful = False
-            if game.challenge_attempted:
-                challenge_successful = game.challenge(game.players[game.players.index('Computer')], game.players[(game.players.index('Computer') + 1) % len(game.players)], action)
-            if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
-                match game.current_action:
-                    case "coup" | "assassinate" | "steal":
-                        getattr(game, action)(game.players[game.players.index("Computer")], game.players[(game.players.index("Computer") + 1) % len(game.players)])
-                    case default:
-                        getattr(game, action)(game.players[game.players.index("Computer")])
+            response = "challenge" # TODO: MCTS search for best action
+            process_block_response(response)
+
+        # Play action
+        game.play_action(computer, player, action)
+        game.game_won = check_win()
+        if game.game_won:
+            break
+        
 
 
 if __name__ == "__main__":

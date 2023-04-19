@@ -366,3 +366,20 @@ class Game():
                     return True
             case default:
                 pass
+    
+    def play_action(self, player, target, action):
+        """
+        Process the playing of an action.
+        """
+        if self.block_attempted: # If block is attempted, attempt block 
+            self.block(player, target, action)
+        else: # Action is allowed
+            challenge_successful = False
+            if self.challenge_attempted:
+                challenge_successful = self.challenge(player, target, action)
+            if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
+                match self.current_action:
+                    case "coup" | "assassinate" | "steal":
+                        getattr(self, action)(player, target)
+                    case default:
+                        getattr(self, action)(player)
