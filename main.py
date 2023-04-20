@@ -133,7 +133,18 @@ def game_loop_pvc():
         # print(mcts_probs)
         
         action_prob = {game.playable_actions[i]: mcts_probs[i] for i in range(len(mcts_probs))}
-    
+
+        # Add more weighting to actions that are legal
+        if game.playable_actions == ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]:
+            if "duke" in computer.hand:
+                action_prob['tax'] += 0.1
+            if "captain" in computer.hand:
+                action_prob['steal'] += 0.1
+            if "assassin" in computer.hand:
+                action_prob['assassinate'] += 0.1
+            if "ambassador" in computer.hand:
+                action_prob['exchange'] += 0.1
+        
         return random.choices(list(action_prob.keys()), weights=list(action_prob.values()), k=1)[0]
     
     def print_game_status():
