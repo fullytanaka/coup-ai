@@ -1,6 +1,6 @@
-import numpy as np
 from copy import copy, deepcopy
 import math
+import random
 import game
 
 class Node:
@@ -38,7 +38,7 @@ class Node:
         Select the child with the highest UCB score
         """
         best_child = None
-        best_score = -np.inf
+        best_score = -999999999999999999999
 
         for child in self.children:
             score = self.get_ucb(child)
@@ -57,7 +57,7 @@ class Node:
         return q_value + self.args['C'] * math.sqrt(math.log(self.visits) / child.visits)
 
     def expand(self):
-        action = np.random.choice(self.untried_actions)
+        action = random.choice(self.untried_actions)
         self.untried_actions.remove(action)
 
         child_state = self.game.get_next_state(self.state["turn"], action)
@@ -78,7 +78,7 @@ class Node:
         rollout_player = self.game.turn
         rollout_opponent = self.game.players[(self.game.players.index(rollout_player) + 1) % len(self.game.players)]
         for i in range(self.args['max_depth']):
-            action = np.random.choice(rollout_game.playable_actions)
+            action = random.choice(rollout_game.playable_actions)
             rollout_game.play_action(rollout_player, rollout_opponent, action)
             winner, terminated = rollout_game.get_winner_and_terminated()
             # Rewards
