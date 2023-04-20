@@ -35,7 +35,9 @@ class Game():
             self.hand.append(card)
         
         def remove_card(self, card):
-            """Remove a card from the player's hand."""
+            """Attempt to remove a card from the player's hand."""
+            if card not in self.hand:
+                return
             self.hand.remove(card)
 
         def print_information(self):
@@ -168,6 +170,8 @@ class Game():
     """
     def lose_card(self, target):
         """Target choose a card to lose."""
+        if len(target.hand) == 0:
+            return
         if len(target.hand) == 1:
             target.hand.pop()
             return
@@ -180,22 +184,22 @@ class Game():
                 elif "contessa" in target.hand:
                     card = (target.hand.index("contessa") + 1) % len(target.hand)
                 else:
-                    card = random.randint(0, len(target.hand))
+                    card = random.randint(0, len(target.hand) - 1)
                 print(f"{target} lost {card}")
                 target.hand.pop(card)
                 return
-        
-            print(f"{target} choose a card to lose by entering the index of the card.")
-            while True:
-                try:
-                    card = int(input())
-                    print(f"{target} lost {target.hand[card]}")
-                    target.hand.pop(card)
-                    break
-                except IndexError:
-                    print("Invalid input. Try again.")
-                except ValueError:
+            else: 
+                print(f"{target} choose a card to lose by entering the index of the card.")
+                while True:
+                    try:
+                        card = int(input())
+                        print(f"{target} lost {target.hand[card]}")
+                        target.hand.pop(card)
+                        break
+                    except IndexError:
                         print("Invalid input. Try again.")
+                    except ValueError:
+                            print("Invalid input. Try again.")
         else:
             card = random.randint(0, len(target.hand) - 1)
             print(f"{target} lost {target.hand[card]}")
@@ -262,43 +266,53 @@ class Game():
         """
         Ambassador influence. Exchange their own cards with cards the deck.
         """
+        if len(player.hand) == 0:
+            return
+        
         random.shuffle(self.deck)
         top = self.deck[:len(player.hand)]
-        if player.name == "Computer":
-            if "duke" in top:
-                card = top.index("duke")
-            elif "assassin" in top:
-                card = top.index("assassin")
-            else:
-                card = random.randint(0, len(top))
-            
-            if "ambassador" in player.hand:
-                card_to_replace = player.hand.index("ambassador")
-            elif "contessa" in player.hand:
-                card_to_replace = player.hand.index("contessa")
-            else:
-                card_to_replace = random.randint(0, len(player.hand) - 1)
+        if not self.is_simulation:
+            if player.name == "Computer":
+                if "duke" in top:
+                    card = top.index("duke")
+                elif "assassin" in top:
+                    card = top.index("assassin")
+                else:
+                    card = random.randint(0, len(top) - 1)
+                
+                if "ambassador" in player.hand:
+                    card_to_replace = player.hand.index("ambassador")
+                elif "contessa" in player.hand:
+                    card_to_replace = player.hand.index("contessa")
+                else:
+                    card_to_replace = random.randint(0, len(player.hand) - 1)
 
+                player.hand.append(top.pop(card))
+                top.append(player.hand.pop(card_to_replace))
+                print(f"{player} exchanged cards!")
+            
+            else:
+                while True:
+                    print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any.")
+                    try:
+                        match input("Keep hand? (y/n): "):
+                            case "y":
+                                break
+                            case default:
+                                pass
+                        card_to_replace = int(input("Card to replace: "))
+                        card = int(input("Card to swap with: "))
+                        player.hand.append(top.pop(card))
+                        top.append(player.hand.pop(card_to_replace))
+                        print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
+                    except ValueError:
+                            print("Invalid input. Try again.") 
+        else:
+            card = random.randint(0, len(top) - 1)
+            card_to_replace = random.randint(0, len(player.hand) - 1)
             player.hand.append(top.pop(card))
             top.append(player.hand.pop(card_to_replace))
             print(f"{player} exchanged cards!")
-        
-        else:
-            while True:
-                print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any.")
-                try:
-                    match input("Keep hand? (y/n): "):
-                        case "y":
-                            break
-                        case default:
-                            pass
-                    card_to_replace = int(input("Card to replace: "))
-                    card = int(input("Card to swap with: "))
-                    player.hand.append(top.pop(card))
-                    top.append(player.hand.pop(card_to_replace))
-                    print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
-                except ValueError:
-                        print("Invalid input. Try again.")
 
     def steal(self, player, target):
         """

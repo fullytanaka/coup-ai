@@ -78,21 +78,33 @@ class Node:
         rollout_player = self.game.turn
         rollout_opponent = self.game.players[(self.game.players.index(rollout_player) + 1) % len(self.game.players)]
         for i in range(self.args['max_depth']):
-            action = np.random.choice(self.game.playable_actions)
+            action = np.random.choice(rollout_game.playable_actions)
             rollout_game.play_action(rollout_player, rollout_opponent, action)
             winner, terminated = rollout_game.get_winner_and_terminated()
-            if terminated:
-                if rollout_player == self.game.players[(self.game.players.index(winner) + 1) % len(self.game.players)]:
-                    winner = self.game.players[(self.game.players.index(winner) + 1) % len(self.game.players)]
-                return winner
+            # Rewards
+            self.value_sum += rollout_player.coins
+            if len(rollout_opponent.hand) == 1:
+                self.value_sum += 300
+            if len(rollout_opponent.hand) == 0:
+                self.value_sum += 900
+
+            # Punishments
+            if rollout_opponent.coins >=7:
+                self.value_sum -= 100
+            else:
+                self.value_sum -= rollout_opponent.coins
+            if len(rollout_player.hand) == 1:
+                self.value_sum -= 100
+            if len(rollout_player.hand) == 0:
+                self.value_sum -= 300
+
             rollout_player = self.game.players[(self.game.players.index(rollout_player) + 1) % len(self.game.players)]
-    
+        return self.value_sum
     def backpropagate(self, value_sum):
         self.visits += 1
-        if self.state["winner"] == "Computer":
-            self.value_sum += 300
-        else:
-            self.value_sum -= 300
+        if self.state['winner'] == "Player":
+            self.value_sum = -value_sum
+        self.value_sum += value_sum
 
         if self.parent is not None:
             self.parent.backpropagate(value_sum)
@@ -115,7 +127,6 @@ class MCTS:
 
         for simulation in range(self.args['num_simulations']):
             node = root
-            print(node.state)
             # Selection
             while node.is_fully_expanded():
                 node = node.select()
@@ -139,4 +150,7 @@ class MCTS:
             action_probs[action_probs.index('coup')] = 0
         if 'assassinate' in action_probs:
             action_probs[action_probs.index('assassinate')] = 0
+        
+        for i in range(len(action_probs)):
+            action_probs[i] /= self.args['num_simulations']
         return(action_probs)

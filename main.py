@@ -4,6 +4,23 @@ import argparse
 import pprint
 import mcts
 
+from contextlib import contextmanager
+import sys, os
+# Code from: https://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
+@contextmanager
+def suppress_stdout():
+    """
+    Suppresses stdout for the duration of the context. 
+    This is for copying the game state and playing out an action without printing to the console.
+    """
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--player", help="Play against another player", action="store_true")
 parser.add_argument("-c", "--computer", help="Play against the computer", action="store_true")
@@ -104,10 +121,23 @@ def game_loop_pvc():
             print('!' * 80)
             return True
         return False
+    
+    def get_computer_action():
+        if game.playable_actions == ["allow"]:
+            return "allow"
+        
+        print("Computer is thinking...")
+        with suppress_stdout():
+            mcts_module = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000, 'max_depth':100})
+            mcts_probs = mcts_module.search()
+        print(mcts_probs)
+        
+        action_prob = {game.playable_actions[i]: mcts_probs[i] for i in range(len(mcts_probs))}
+    
+        return random.choices(list(action_prob.keys()), weights=list(action_prob.values()), k=1)[0]
         
     player = game.players[game.players.index("Player")]
     computer = game.players[game.players.index("Computer")]    
-    computer.hand = ["assassin", "captain"]
     while True:
         game.round += 1
         random.shuffle(game.deck)
@@ -120,7 +150,7 @@ def game_loop_pvc():
         print(f" {game.turn}'s turn ".center(80, "."))
         print('#' * 80)
         print(player.print_information())
-        print(computer.print_information()) # Debug
+        # print(computer.print_information()) # Debug
         print(f"Your opponent has {len(computer.hand)} influence(s) and {computer.coins} coins.")
         print('#' * 80)
 
@@ -142,11 +172,7 @@ def game_loop_pvc():
         game.play_action(action=action)
 
         # Ask computer to block/challenge
-        print("Computer is thinking...")
-        # mcts_probs = mcts.search() # TODO: MCTS search for best action
-        # print(mcts_probs)
-        # response = game.playable_actions[mcts_probs.index(max(mcts_probs))]
-        response="allow"
+        response = get_computer_action()
         print(f"Computer chose to {response}.")
         game.play_action(player, computer, action=response)
 
@@ -165,9 +191,7 @@ def game_loop_pvc():
         print(f" {game.turn}'s turn ".center(80, "."))
 
         # Computer chooses an action
-        mcts_probs = mcts.search() # TODO: MCTS search for best action
-        print(mcts_probs)
-        action = game.playable_actions[mcts_probs.index(max(mcts_probs))]
+        action = get_computer_action() 
         print(f"Computer chose {action}.")
         game.current_action = action
         game.play_action(action=action)
@@ -180,7 +204,7 @@ def game_loop_pvc():
 
         # If player blocks, ask computer to challenge or allow
         if game.block_attempted:
-            response = random.choice(game.playable_actions) # TODO: MCTS search for best action
+            response = get_computer_action()
             print(f"Computer chose to {response}.")
             game.play_action(computer, player, action=response)
         
@@ -191,19 +215,14 @@ def game_loop_pvc():
 
 if __name__ == "__main__":
     game = game.Game()
-    mcts = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000, 'max_depth':500})
 
     print("Welcome to Coup!")
 
     if args.player:
         print("Player vs Player")
-        # game.add_player("Player 1")
-        # game.add_player("Player 2")
         game.initial_draw()
         game_loop_pvp()
     else:
         print("Player vs Computer")
-        # game.add_player("Player")
-        # game.add_player("Computer")
         game.initial_draw_computer()
         game_loop_pvc()
