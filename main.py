@@ -130,7 +130,7 @@ def game_loop_pvc():
         with suppress_stdout():
             mcts_module = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000, 'max_depth':100})
             mcts_probs = mcts_module.search()
-        print(mcts_probs)
+        # print(mcts_probs)
         
         action_prob = {game.playable_actions[i]: mcts_probs[i] for i in range(len(mcts_probs))}
     
