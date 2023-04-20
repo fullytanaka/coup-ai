@@ -115,9 +115,8 @@ def game_loop_pvc():
 
         # Player's Action Turn
         game.turn = player
-        game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
-        game.challenge_attempted = False
-        game.block_attempted = False
+        game.playable_actions = game.get_playable_actions()
+
         print(f" {game.turn}'s turn ".center(80, "."))
         print('#' * 80)
         print(player.print_information())
@@ -142,11 +141,12 @@ def game_loop_pvc():
         print(f"Player chose {action}.")
         game.play_action(action=action)
 
-        # pprint.pprint(game.get_next_state(player, "challenge"))
-
         # Ask computer to block/challenge
-        # mcts_probs = mcts.search(game)# TODO: MCTS search for best action
-        response = random.choice(game.playable_actions)
+        print("Computer is thinking...")
+        # mcts_probs = mcts.search() # TODO: MCTS search for best action
+        # print(mcts_probs)
+        # response = game.playable_actions[mcts_probs.index(max(mcts_probs))]
+        response="allow"
         print(f"Computer chose to {response}.")
         game.play_action(player, computer, action=response)
 
@@ -160,14 +160,14 @@ def game_loop_pvc():
             break
 
         # Computer's Action Turn
+        game.playable_actions = game.get_playable_actions()
         game.turn = computer
         print(f" {game.turn}'s turn ".center(80, "."))
-        game.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
-        game.challenge_attempted = False
-        game.block_attempted = False
 
         # Computer chooses an action
-        action = random.choice(game.playable_actions) # TODO: MCTS search for best action
+        mcts_probs = mcts.search() # TODO: MCTS search for best action
+        print(mcts_probs)
+        action = game.playable_actions[mcts_probs.index(max(mcts_probs))]
         print(f"Computer chose {action}.")
         game.current_action = action
         game.play_action(action=action)
@@ -191,7 +191,7 @@ def game_loop_pvc():
 
 if __name__ == "__main__":
     game = game.Game()
-    mcts = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1})
+    mcts = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000, 'max_depth':500})
 
     print("Welcome to Coup!")
 

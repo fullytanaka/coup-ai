@@ -171,19 +171,20 @@ class Game():
         if len(target.hand) == 1:
             target.hand.pop()
             return
-        if target.name == "Computer":
-            # Computer will try to save Duke or Contessa. Otherwise, choose a random card
-            if "duke" in target.hand:
-                card = (target.hand.index("duke") + 1) % len(target.hand)
-            elif "contessa" in target.hand:
-                card = (target.hand.index("contessa") + 1) % len(target.hand)
-            else:
-                card = random.randint(0, len(target.hand) - 1)
-            print(f"{target} lost {target.hand[card]}")
-            target.hand.pop(card)
-            return
         
         if not self.is_simulation:
+            if target.name == "Computer":
+                # Computer will try to save Duke or Contessa. Otherwise, choose a random card
+                if "duke" in target.hand:
+                    card = (target.hand.index("duke") + 1) % len(target.hand)
+                elif "contessa" in target.hand:
+                    card = (target.hand.index("contessa") + 1) % len(target.hand)
+                else:
+                    card = random.randint(0, len(target.hand))
+                print(f"{target} lost {card}")
+                target.hand.pop(card)
+                return
+        
             print(f"{target} choose a card to lose by entering the index of the card.")
             while True:
                 try:
@@ -269,7 +270,7 @@ class Game():
             elif "assassin" in top:
                 card = top.index("assassin")
             else:
-                card = random.randint(0, len(top) - 1)
+                card = random.randint(0, len(top))
             
             if "ambassador" in player.hand:
                 card_to_replace = player.hand.index("ambassador")

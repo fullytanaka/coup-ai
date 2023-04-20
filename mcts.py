@@ -1,5 +1,5 @@
 import numpy as np
-from copy import deepcopy
+from copy import copy, deepcopy
 import math
 import game
 
@@ -10,16 +10,22 @@ class Node:
     def __init__(self, game: game, args, parent=None, action=None):
         self.game = game
         self.args = args
-        self.state = self.game.get_game_state("Computer")
-        print(self.state)
+        self.state = self.game.get_game_state(game.turn)
         self.parent = parent
         self.action = action
 
         self.children = []
-        self.untried_actions = self.game.playable_actions
+        self.untried_actions = copy(self.game.playable_actions)
+
+        # Remove actions that can't be played
+        if "coup" in self.untried_actions or "assassinate" in self.untried_actions:
+            if self.state['coins'] < 3:
+                self.untried_actions.remove('assassinate')
+            if self.state['coins'] < 7:
+                self.untried_actions.remove('coup')
 
         self.visits = 0
-        self.wins = 0
+        self.value_sum = 0
 
     def is_fully_expanded(self):
         """
@@ -35,7 +41,7 @@ class Node:
         best_score = -np.inf
 
         for child in self.children:
-            score = self.get_ucb(self, child)
+            score = self.get_ucb(child)
             if score > best_score:
                 best_child = child
                 best_score = score
@@ -47,49 +53,49 @@ class Node:
         """
         Calculate the UCB score for a child node
         """
-        q_value = 1 - ((child.wins / child.visits) + 1) / 2
-        return q_value + self.args['C'] * math.sqrt(math.log(self.visit_count) / child.visit_count)
+        q_value = 1 - ((child.value_sum / child.visits) + 1) / 2
+        return q_value + self.args['C'] * math.sqrt(math.log(self.visits) / child.visits)
 
     def expand(self):
         action = np.random.choice(self.untried_actions)
         self.untried_actions.remove(action)
 
-        child_state = self.game.get_next_state(self.game, self.state["turn"], action)
+        child_state = self.game.get_next_state(self.state["turn"], action)
 
         child = Node(self.game, self.args, self, action)
         self.children.append(child)
         return child
 
     def simulate(self):
-        winner, terminated = self.game.get_winner_and_terminated(self.state)
-        if winner != None:
+        winner, terminated = self.game.get_winner_and_terminated()
+        if winner != "":
             winner = self.game.players[(self.game.players.index(winner) + 1) % len(self.game.players)]
 
         if terminated:
             return winner
         
-        rollout_state = deepcopy(self.state)
-        rollout_player = self.state["turn"]
-        while True:
+        rollout_game = deepcopy(self.game)
+        rollout_player = self.game.turn
+        rollout_opponent = self.game.players[(self.game.players.index(rollout_player) + 1) % len(self.game.players)]
+        for i in range(self.args['max_depth']):
             action = np.random.choice(self.game.playable_actions)
-            rollout_state = self.game.get_next_state(self.game, rollout_player, action)
-            winner, terminated = self.game.get_winner_and_terminated(rollout_state)
+            rollout_game.play_action(rollout_player, rollout_opponent, action)
+            winner, terminated = rollout_game.get_winner_and_terminated()
             if terminated:
                 if rollout_player == self.game.players[(self.game.players.index(winner) + 1) % len(self.game.players)]:
                     winner = self.game.players[(self.game.players.index(winner) + 1) % len(self.game.players)]
                 return winner
             rollout_player = self.game.players[(self.game.players.index(rollout_player) + 1) % len(self.game.players)]
     
-    def backpropagate(self, wins):
+    def backpropagate(self, value_sum):
         self.visits += 1
         if self.state["winner"] == "Computer":
-            self.wins += 1
+            self.value_sum += 300
         else:
-            self.wins -= 1
+            self.value_sum -= 300
 
         if self.parent is not None:
-            print(self.parent)
-            self.parent.backpropagate(wins)
+            self.parent.backpropagate(value_sum)
     
 class MCTS:
     """
@@ -102,30 +108,35 @@ class MCTS:
         self.game = game
         self.args = args
 
-    def search(self, state):
-        root = Node(self.game, self.args)
+    def search(self):
+        game_simulation = deepcopy(self.game)
+        game_simulation.is_simulation = True
+        root = Node(game_simulation, self.args)
 
-        for search in range(self.args['num_simulations']):
+        for simulation in range(self.args['num_simulations']):
             node = root
+            print(node.state)
             # Selection
             while node.is_fully_expanded():
-                node = self.select()
-            winner, terminated = self.game.get_winner_and_terminated(node.state)
-            if winner != None:
-                winner = self.game.players[(self.game.players.index(winner) + 1) % len(self.game.players)]
+                node = node.select()
+            winner, terminated = game_simulation.get_winner_and_terminated()
+            if winner != '':
+                winner = game_simulation.players[(game_simulation.players.index(winner) + 1) % len(game_simulation.players)]
             if not terminated:
                 # Expansion
                 node = node.expand()
                 # Simulation
-                wins = node.simulate()
+                value_sum = node.simulate()
 
             # Backpropagation
-            node.backpropagate(wins)
+            node.backpropagate(value_sum)
 
         # return visits
-        action_probs = self.game.playable_actions
-        print(action_probs)
+        action_probs = game_simulation.playable_actions
         for child in root.children:
-            print(child.action)
             action_probs[action_probs.index(child.action)] = child.visits
-        action_probs /= np.sum(action_probs)
+        if 'coup' in action_probs:
+            action_probs[action_probs.index('coup')] = 0
+        if 'assassinate' in action_probs:
+            action_probs[action_probs.index('assassinate')] = 0
+        return(action_probs)
