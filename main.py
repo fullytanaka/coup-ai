@@ -25,7 +25,7 @@ def game_loop_pvp():
             if min(influence_count) == 0: # Check if a player has no more influences
                 print(f"{game.players[influence_count.index(min(influence_count))]} has no more influences!")
                 print("Game over!")
-                print(f"{game.players[influence_count.index(max(influence_count))]} wins!")
+                print(f"{game.players[influence_count.index(max(influence_count))]} wins on round {game.round}!")
                 game.game_won = True
                 break
 
@@ -95,18 +95,19 @@ def game_loop_pvc():
     """
     
     def check_win(): 
-        influence_count = [len(player.hand) for player in game.players]
-        if min(influence_count) == 0: # Check if a player has no more influences
+        winner, loser = game.check_win()
+        if winner: # Check if a player has no more influences
             print('!' * 80)
-            print(f"{game.players[influence_count.index(min(influence_count))]} has no more influences!".center(80))
-            print("Game over!".center(80))
-            print(f"{game.players[influence_count.index(max(influence_count))]} wins!".center(80))
+            print(f"{loser} has no more influences!".center(80))
+            print(f"Game over on round {game.round}!".center(80))
+            print(f"{winner} wins!".center(80))
             print('!' * 80)
             return True
         return False
         
     player = game.players[game.players.index("Player")]
     computer = game.players[game.players.index("Computer")]    
+    computer.hand = ["assassin", "captain"]
     while True:
         game.round += 1
         random.shuffle(game.deck)
@@ -120,7 +121,7 @@ def game_loop_pvc():
         print(f" {game.turn}'s turn ".center(80, "."))
         print('#' * 80)
         print(player.print_information())
-        # print(computer.print_information()) # Debug
+        print(computer.print_information()) # Debug
         print(f"Your opponent has {len(computer.hand)} influence(s) and {computer.coins} coins.")
         print('#' * 80)
 
@@ -136,25 +137,26 @@ def game_loop_pvc():
             except Exception as e:
                 print(f"An error occurred: {e}")
                 raise e
-            
+        
         game.current_action = action
         print(f"Player chose {action}.")
-        
+        game.play_action(action=action)
+
+        # pprint.pprint(game.get_next_state(player, "challenge"))
+
         # Ask computer to block/challenge
-        game.playable_actions = game.get_playable_actions(action)
-        response = "allow" # TODO: MCTS search for best action
-        print(f"Computer chooses to {response}")
-        game.process_action_response(response)
+        # mcts_probs = mcts.search(game)# TODO: MCTS search for best action
+        response = random.choice(game.playable_actions)
+        print(f"Computer chose to {response}.")
+        game.play_action(player, computer, action=response)
 
         # If computer blocks, ask player to challenge or allow
         if game.block_attempted:
-            response = input(f"{game.players[game.players.index('Player')]}, choose to challenge or allow: ")
-            game.process_block_response(response)
+            print(f"Player, choose to challenge or allow: ")
+            response = input().lower().replace(" ", "_")
+            game.play_action(player, computer, action=response)
 
-        # Play action
-        game.play_action(player, computer, action)
-        game.game_won = check_win()
-        if game.game_won:
+        if check_win():
             break
 
         # Computer's Action Turn
@@ -165,44 +167,43 @@ def game_loop_pvc():
         game.block_attempted = False
 
         # Computer chooses an action
-        action = "tax" # TODO: MCTS search for best action
+        action = random.choice(game.playable_actions) # TODO: MCTS search for best action
         print(f"Computer chose {action}.")
         game.current_action = action
+        game.play_action(action=action)
                     
         # Ask player to block/challenge
-        game.playable_actions = game.get_playable_actions(action)
         print(f"Player, choose to {', '.join(game.playable_actions)}: ")
         response = input().lower().replace(" ", "_")
-        game.process_action_response(response)
+        print(f"Player chose {response}.")
+        game.play_action(computer, player, action=response)
 
         # If player blocks, ask computer to challenge or allow
         if game.block_attempted:
-            response = "challenge" # TODO: MCTS search for best action
-            game.process_block_response(response)
-
-        # Play action
-        game.play_action(computer, player, action)
-        game.game_won = check_win()
-        if game.game_won:
+            response = random.choice(game.playable_actions) # TODO: MCTS search for best action
+            print(f"Computer chose to {response}.")
+            game.play_action(computer, player, action=response)
+        
+        if check_win():
             break
         
 
 
 if __name__ == "__main__":
     game = game.Game()
-    # mcts = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000})
+    mcts = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1})
 
     print("Welcome to Coup!")
 
     if args.player:
         print("Player vs Player")
-        game.add_player("Player 1")
-        game.add_player("Player 2")
+        # game.add_player("Player 1")
+        # game.add_player("Player 2")
         game.initial_draw()
         game_loop_pvp()
     else:
         print("Player vs Computer")
-        game.add_player("Player")
-        game.add_player("Computer")
+        # game.add_player("Player")
+        # game.add_player("Computer")
         game.initial_draw_computer()
         game_loop_pvc()

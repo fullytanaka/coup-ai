@@ -2,6 +2,7 @@ import random
 from copy import deepcopy
 from contextlib import contextmanager
 import sys, os
+import pprint
 
 # Code from: https://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
 @contextmanager
@@ -55,13 +56,14 @@ class Game():
         
     def __init__(self):
         """Initialize the game."""
-        self.players = []
+        self.players = [self.Player("Player"), self.Player("Computer")]
         self.is_simulation = False
         self.deck = ["duke", "assassin", "ambassador", "captain", "contessa"] * 3
         self.round = 0
-        self.turn = ""
+        self.turn = self.players[0]
         self.current_action = ""
         self.game_won = False
+        self.winner = ""
         self.playable_actions = []
         self.blockable_actions = ["assassinate", "steal", "foreign_aid"]
         self.challengeable_actions = ["tax", "assassinate", "steal", "exchange", "block"]
@@ -139,44 +141,36 @@ class Game():
         random.shuffle(self.deck)
         self.players[1].hand.append(self.deck.pop())
     
-    def get_playable_actions(self, action):
+    def get_playable_actions(self, action=None):
         """
         Returns a list of playable actions based on the current action.
         """
-        if action in self.challengeable_actions and action in self.blockable_actions:
-            return ["allow", "challenge", "block"]
-        elif action in self.challengeable_actions:
-            return ["allow", "challenge"]
-        elif action in self.blockable_actions:
-            return ["allow", "block"]
-        else:
-            return ["allow"]
-        
-    def process_action_response(self, response):
-        """
-        Processes the response to the action
-        """
-        match response:
-            case "challenge":
-                self.challenge_attempted = True
+        match action:
+            case None:
+                return ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
             case "block":
                 self.block_attempted = True
-                self.playable_actions = ["allow", "challenge"]
-            case default:
-                pass
-
-    def process_block_response(self, response):
-        match response:
+                return ["allow", "challenge"]
             case "challenge":
-                response = "challenge"
                 self.challenge_attempted = True
+                return ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
             case default:
-                pass
+                if action in self.challengeable_actions and action in self.blockable_actions:
+                    return ["allow", "challenge", "block"]
+                elif action in self.challengeable_actions:
+                    return ["allow", "challenge"]
+                elif action in self.blockable_actions:
+                    return ["allow", "block"]
+                else:
+                    return ["allow"]
     """
     Game actions
     """
     def lose_card(self, target):
         """Target choose a card to lose."""
+        if len(target.hand) == 1:
+            target.hand.pop()
+            return
         if target.name == "Computer":
             # Computer will try to save Duke or Contessa. Otherwise, choose a random card
             if "duke" in target.hand:
@@ -217,10 +211,6 @@ class Game():
             return
         print(f"{player} coup {target}!")
         player.coins -= 7
-        if len(target.hand) == 1:
-            print(f"{target} lost {target.hand[0]}")
-            target.hand.pop(0)
-            return
         self.lose_card(target)
     
     def income(self, player):
@@ -252,6 +242,9 @@ class Game():
         
         Assassinate can be blocked by the Contessa.
         """
+        if len(target.hand) == 0:
+            print("Target has no cards.")
+            return
         if player.coins < 3:
             print("You don't have enough coins to assassinate.")
             return
@@ -270,21 +263,41 @@ class Game():
         """
         random.shuffle(self.deck)
         top = self.deck[:len(player.hand)]
-        while True:
-            print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any.")
-            try:
-                match input("Keep hand? (y/n): "):
-                    case "y":
-                        break
-                    case default:
-                        pass
-                card_to_replace = int(input("Card to replace: "))
-                card = int(input("Card to swap with: "))
-                player.hand.append(top.pop(card))
-                top.append(player.hand.pop(card_to_replace))
-                print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
-            except ValueError:
-                    print("Invalid input. Try again.")
+        if player.name == "Computer":
+            if "duke" in top:
+                card = top.index("duke")
+            elif "assassin" in top:
+                card = top.index("assassin")
+            else:
+                card = random.randint(0, len(top) - 1)
+            
+            if "ambassador" in player.hand:
+                card_to_replace = player.hand.index("ambassador")
+            elif "contessa" in player.hand:
+                card_to_replace = player.hand.index("contessa")
+            else:
+                card_to_replace = random.randint(0, len(player.hand) - 1)
+
+            player.hand.append(top.pop(card))
+            top.append(player.hand.pop(card_to_replace))
+            print(f"{player} exchanged cards!")
+        
+        else:
+            while True:
+                print(f"{player} exchange {player.hand} with {top} by entering the index of the card to replace and the card to swap with, if any.")
+                try:
+                    match input("Keep hand? (y/n): "):
+                        case "y":
+                            break
+                        case default:
+                            pass
+                    card_to_replace = int(input("Card to replace: "))
+                    card = int(input("Card to swap with: "))
+                    player.hand.append(top.pop(card))
+                    top.append(player.hand.pop(card_to_replace))
+                    print(f"{player} exchanged {top[card]} with {player.hand[card_to_replace]}")
+                except ValueError:
+                        print("Invalid input. Try again.")
 
     def steal(self, player, target):
         """
@@ -343,11 +356,11 @@ class Game():
                         self.lose_card(target)
                 case "foreign_aid":
                     if "duke" in target.hand:
-                        print(f"{target} had the duke and blocked the foreign aid! The challenge was unsuccessful!")
-                        self.lose_card(player)
-                        target.remove_card("duke")
+                        print(f"{player} had the duke and blocked the foreign aid! The challenge was unsuccessful!")
+                        self.lose_card(target)
+                        player.remove_card("duke")
                         self.deck.append("duke")
-                        target.add_card(self.deck.pop())
+                        player.add_card(self.deck.pop())
                     else:
                         print(f"{target} didn't have duke and the challenge was successful!")
                         self.lose_card(target)
@@ -418,23 +431,61 @@ class Game():
             case default:
                 pass
     
-    def play_action(self, player, target, action):
+    def play_action(self, player=None, target=None, action="allow"):
         """
         Process the playing of an action.
         """
-        if self.block_attempted: # If block is attempted, attempt block 
-            self.block(player, target, action)
-        else: # Action is allowed
-            challenge_successful = False
-            if self.challenge_attempted:
-                challenge_successful = self.challenge(player, target, action)
-            if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
-                match self.current_action:
-                    case "coup" | "assassinate" | "steal":
-                        getattr(self, action)(player, target)
-                    case default:
-                        getattr(self, action)(player)
+        match action:
+            case "coup" | "income" | "foreign_aid" | "tax" | "exchange" | "assassinate" | "steal":
+                self.current_action = action
+                self.playable_actions = self.get_playable_actions(action)
+            case "block":
+                self.block_attempted = True
+                self.playable_actions = self.get_playable_actions(action)
+            case "challenge":
+                self.challenge_attempted = True
+                self.play_action(player, target)
+            case default:
+                if self.block_attempted: # If block is attempted, attempt block 
+                    self.block(player, target, self.current_action)
+                else: # Action is allowed
+                    challenge_successful = False
+                    if self.challenge_attempted:
+                        challenge_successful = self.challenge(player, target, self.current_action)
+                    if not challenge_successful: # If challenge is unsuccessful, or there is no challenge, play the action
+                        match self.current_action:
+                            case "coup" | "assassinate" | "steal":
+                                getattr(self, self.current_action)(player, target)
+                            case default:
+                                getattr(self, self.current_action)(player)
+        
+                # Reset flags
+                self.reset_flags()
+
+        # Swap turn
+        if self.current_action != "":
+            self.swap_turn()
+
+        # Increment round
+        if self.current_action == "" and self.turn == self.players[0]:
+            self.round += 1
+
+        # Check if there is a winner
+        winner, loser = self.check_win()
+        if winner:
+            self.winner = winner
+
+            
+
     
+    def reset_flags(self):
+        """
+        Reset all flags.
+        """
+        self.current_action = ""
+        self.playable_actions = self.get_playable_actions()
+        self.block_attempted = False
+        self.challenge_attempted = False
     """
     Imperfect game state information
     """
@@ -465,55 +516,43 @@ class Game():
             "current_action": self.current_action,
         }
     
-    def get_next_state(self, game, player, action):
+    def get_next_state(self, player, action):
         """
         Returns the state after an action is played.
         """
-        with suppress_stdout():
-            temp = deepcopy(game)
-            temp.is_simulation = True
-            opponent = temp.players[(temp.players.index(player) + 1) % len(temp.players)]
-            match action:
-                case "coup" | "income" | "foreign_aid" | "tax" | "steal" | "assassinate" | "exchange":
-                    temp.current_action = action
-                    temp.get_playable_actions(action)
-                case "block":
-                    temp.playable_actions = ["allow", "challenge"]
-                    temp.block_attempted = True
-                case "challenge":
-                    temp.playable_actions = ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]
-                    temp.challenge_attempted = True
-                    temp.play_action(player, opponent, temp.current_action)
-                case default:
-                    temp.play_action(player, opponent, action)
-                    # Reset flags
-                    temp.challenge_attempted = False
-                    temp.block_attempted = False
-    
-            next_game_state = temp.get_game_state(player)
-
-            # Swap turn and increase round if necessary
-            next_game_state["turn"] = opponent
-            if not temp.block_attempted and not temp.challenge_attempted and temp.playable_actions == ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]:
-                next_game_state["round"] += 1
-
-            # Check who is the winner
-            if next_game_state["opponent_influence_count"] == 0:
-                next_game_state["winner"] = player
-                next_game_state["game_won"] = True
-            if next_game_state["influence_count"] == 0:
-                next_game_state["winner"] = opponent
-                next_game_state["game_won"] = True
-            return next_game_state
+        temp = deepcopy(self)
+        temp.is_simulation = True
+        opponent = temp.players[(temp.players.index(player) + 1) % len(temp.players)]
+        temp.play_action(player=player, target=opponent, action=action)
+        next_game_state = temp.get_game_state(player)
+        return next_game_state
                 
-    def get_winner_and_terminated(self, state):
+    def get_winner_and_terminated(self):
         """
         Returns the winner and whether the game is terminated.
         """
-        return state["winner"], state["game_won"]
+        return self.winner, self.game_won
+    
+    def check_win(self):
+        """
+        Checks if the game is won.
+        """
+        influence_count = [len(player.hand) for player in self.players]
+        if 0 in influence_count:
+            self.game_won = True
+            winner = self.players[influence_count.index(max(influence_count))]
+            loser = self.players[influence_count.index(min(influence_count))]
+            return winner, loser
+        return None, None
 
     def get_opponent(self, player):
         """
         Returns the opponent of the player.
         """
         return self.players[(self.players.index(player) + 1) % len(self.players)]
+    
+    def swap_turn(self):
+        """
+        Swaps the turn.
+        """
+        self.turn = self.players[(self.players.index(self.turn) + 1) % len(self.players)]
