@@ -123,10 +123,28 @@ def game_loop_pvc():
         return False
     
     def get_computer_action():
+        """
+        Performs MCTS search to get the best computer action.
+
+        However, there are some hardcoded strategies that the computer will prioritise before performing a search.
+        """
         if game.playable_actions == ["allow"]:
             return "allow"
         
         print("Computer is thinking...")
+
+        # Computer will coup if it has more than 7 coins.
+        if computer.coins >= 7:
+            return "coup"
+
+        # Last ditch efforts
+        if game.playable_actions == game.playable_actions == ["allow", "block", "challenge"]:
+            if game.current_action == "assassinate" and len(computer.hand) == 1:
+                if "contessa" in computer.hand:
+                    return "block"
+                return "challenge"
+
+        # Worst case scenario, computer doesn't have a hardcoded strategy so it will try to find the best move.
         with suppress_stdout():
             mcts_module = mcts.MCTS(game, args={'C':1.41, 'num_simulations':1000, 'max_depth':100})
             mcts_probs = mcts_module.search()
@@ -134,8 +152,9 @@ def game_loop_pvc():
         
         action_prob = {game.playable_actions[i]: mcts_probs[i] for i in range(len(mcts_probs))}
 
-        # Add more weighting to actions that are legal
         if game.playable_actions == ["coup", "income", "foreign_aid", "tax", "steal", "assassinate", "exchange"]:
+
+            # Add more weighting to actions that are legal
             if "duke" in computer.hand:
                 action_prob['tax'] += 0.1
             if "captain" in computer.hand:
@@ -144,6 +163,24 @@ def game_loop_pvc():
                 action_prob['assassinate'] += 0.1
             if "ambassador" in computer.hand:
                 action_prob['exchange'] += 0.1
+
+            # Remove more weighting to actions that are illegal
+            if "duke" not in computer.hand:
+                action_prob['tax'] -= 0.2
+            if "captain" not in computer.hand:
+                action_prob['steal'] -= 0.2
+            if "assassin" not in computer.hand:
+                action_prob['assassinate'] += 0.2
+            if "ambassador" not in computer.hand:
+                action_prob['exchange'] += 0.2
+
+            # Computer more likely to assassinate if it has more than 3 coins, and has the Assassin influence.
+            if computer.coins >= 3 and "assassin" in computer.hand:
+                action_prob['assassinate'] += 0.1
+
+            # Computer is more likely to steal if player is almost able to coup.
+            if player.coins >= 4:
+                action_prob['steal'] += 0.1
         
         return random.choices(list(action_prob.keys()), weights=list(action_prob.values()), k=1)[0]
     
