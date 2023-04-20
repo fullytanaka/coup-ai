@@ -180,6 +180,8 @@ def game_loop_pvc():
 
             # Computer is more likely to steal if player is almost able to coup.
             if player.coins >= 4:
+                if len(computer.hand) == 1:
+                    action_prob['steal'] += 0.9
                 action_prob['steal'] += 0.1
         
         return random.choices(list(action_prob.keys()), weights=list(action_prob.values()), k=1)[0]
@@ -276,3 +278,5 @@ if __name__ == "__main__":
         print("Player vs Computer")
         game.initial_draw_computer()
         game_loop_pvc()
+
+    input("Press Enter to exit.")
