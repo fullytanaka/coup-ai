@@ -135,7 +135,7 @@ class Game():
         else:
             card = random.randint(0, 2)
         self.players[1].hand.append(draw[card])
-        print(f"{self.players[1]} chose {draw[card]}")
+##        print(f"{self.players[1]} chose {draw[card]}")
         draw.pop(card)
         for card in draw:
             self.deck.append(card)
