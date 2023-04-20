@@ -170,9 +170,9 @@ def game_loop_pvc():
             if "captain" not in computer.hand:
                 action_prob['steal'] -= 0.2
             if "assassin" not in computer.hand:
-                action_prob['assassinate'] += 0.2
+                action_prob['assassinate'] -= 0.2
             if "ambassador" not in computer.hand:
-                action_prob['exchange'] += 0.2
+                action_prob['exchange'] -= 0.2
 
             # Computer more likely to assassinate if it has more than 3 coins, and has the Assassin influence.
             if computer.coins >= 3 and "assassin" in computer.hand:
@@ -279,4 +279,4 @@ if __name__ == "__main__":
         game.initial_draw_computer()
         game_loop_pvc()
 
-    input("Press Enter to exit.")
+    exit = input("Press Enter to exit.")
