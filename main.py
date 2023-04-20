@@ -135,6 +135,14 @@ def game_loop_pvc():
         action_prob = {game.playable_actions[i]: mcts_probs[i] for i in range(len(mcts_probs))}
     
         return random.choices(list(action_prob.keys()), weights=list(action_prob.values()), k=1)[0]
+    
+    def print_game_status():
+        print(f" {game.turn}'s turn ".center(80, "."))
+        print('#' * 80)
+        print(player.print_information())
+        # print(computer.print_information()) # Debug
+        print(f"Your opponent has {len(computer.hand)} influence(s) and {computer.coins} coins.")
+        print('#' * 80)
         
     player = game.players[game.players.index("Player")]
     computer = game.players[game.players.index("Computer")]    
@@ -142,17 +150,11 @@ def game_loop_pvc():
         game.round += 1
         random.shuffle(game.deck)
         print(f" Round {game.round} ".center(80, "="))
+        print_game_status()
 
         # Player's Action Turn
         game.turn = player
         game.playable_actions = game.get_playable_actions()
-
-        print(f" {game.turn}'s turn ".center(80, "."))
-        print('#' * 80)
-        print(player.print_information())
-        # print(computer.print_information()) # Debug
-        print(f"Your opponent has {len(computer.hand)} influence(s) and {computer.coins} coins.")
-        print('#' * 80)
 
         # Player chooses an action        
         while True:
@@ -188,7 +190,7 @@ def game_loop_pvc():
         # Computer's Action Turn
         game.playable_actions = game.get_playable_actions()
         game.turn = computer
-        print(f" {game.turn}'s turn ".center(80, "."))
+        print_game_status()
 
         # Computer chooses an action
         action = get_computer_action() 
